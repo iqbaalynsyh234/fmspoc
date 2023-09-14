@@ -44,23 +44,23 @@ class controlroom extends Base
             $this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
         } elseif ($privilegecode == 2) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
@@ -78,7 +78,7 @@ class controlroom extends Base
         $shift = $this->input->post('shift');
         $date = date("Y-m-d", strtotime($datein));
         if (date("Y-m-d") < $date) {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Empty", "total" => 0, "data" => array()));
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Date Not Found", "total" => 0, "data" => array()));
             exit();
         }
         $lastdate = date("Y-m-t", strtotime($datein));
@@ -435,7 +435,7 @@ class controlroom extends Base
                 "length_hour" => count($dhour) //jumlah jam
             ));
         } else {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Empty", "data" => $data, "total" => $nr));
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
         }
     }
 
@@ -448,7 +448,7 @@ class controlroom extends Base
         $shift = $this->input->post('shift');
         $date = date("Y-m-d", strtotime($datein));
         if (date("Y-m-d") < $date) {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Empty", "total" => 0, "data" => array()));
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "total" => 0, "data" => array()));
             exit();
         }
         $lastdate = date("Y-m-t", strtotime($datein));
@@ -482,8 +482,6 @@ class controlroom extends Base
         $shift22 = array("00", "01", "02", "03", "04", "05");
         $allshift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
         $allshift2 = array("00", "01", "02", "03", "04", "05");
-
-
 
         //get vehicle info
         $this->db->select("vehicle_name,vehicle_no,company_name");
@@ -724,7 +722,7 @@ class controlroom extends Base
                 "length_hour" => count($dhour) //jumlah jam
             ));
         } else {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Empty", "data" => $data, "total" => $nr));
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
         }
     }
 
@@ -767,11 +765,11 @@ class controlroom extends Base
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
 
