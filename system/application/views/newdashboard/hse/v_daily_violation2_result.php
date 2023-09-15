@@ -2,9 +2,6 @@
 
 <div class="row">
 
-   
-
-
     <div class="col-lg-5 col-md-5 col-sm-12">
         <figure class="highcharts-figure" style="background-color: white; padding:2px;">
             <div id="loader2" style="display: none;" class="mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded" data-upgraded=",MaterialProgress">
@@ -500,7 +497,7 @@
                 text: 'This Title'
             },
             subtitle: {
-                text: 'Dashboard Trend Alert<br>' + date
+                text: 'Dashboard Trend Alert123<br>' + date
             },
             accessibility: {
                 announceNewData: {
@@ -548,7 +545,7 @@
                                     this.series.chart.setTitle({
                                         text: "Total Overspeed : " + total_data
                                     }, {
-                                        text: "Dashboard Trend Alert<br>" + date
+                                        text: "Dashboard Trend Alert123444<br>" + date
                                     });
                                     total_title_lvl1 = 0;
                                     break;
@@ -563,7 +560,7 @@
                                     this.series.chart.setTitle({
                                         text: "Hour " + hr + " : " + total_title_lvl1 + " Overspeed"
                                     }, {
-                                        text: "Dashboard Trend Alert<br>" + date
+                                        text: "23455<br>" + date
                                     });
 
                                     break;
@@ -692,7 +689,7 @@
                 text: 'This Title'
             },
             subtitle: {
-                text: 'Dashboard Trend Alert<br>' + date
+                text: 'Dashboard Trend Alert2344<br>' + date
             },
             accessibility: {
                 announceNewData: {

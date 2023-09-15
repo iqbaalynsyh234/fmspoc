@@ -641,6 +641,13 @@ if ($totalvehicleingeofence == 0) {
             </li>
 
             <li class="nav-item">
+              <a href="<?= base_url(); ?>controlroom/room" class="nav-lin">
+                <!-- <span class="label label-rouded label-menu label-danger">new</span> -->
+                <span class="title">Dashboard Control Room</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
               <a href="<?= base_url(); ?>ritasehour/board" class="nav-lin">
                 <!-- <span class="label label-rouded label-menu label-danger">new</span> -->
                 <span class="title">Dashboard Ritase</span>
