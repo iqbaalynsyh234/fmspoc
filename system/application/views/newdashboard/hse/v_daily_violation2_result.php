@@ -560,7 +560,7 @@
                                     this.series.chart.setTitle({
                                         text: "Hour " + hr + " : " + total_title_lvl1 + " Overspeed"
                                     }, {
-                                        text: "23455<br>" + date
+                                        text: "Periode<br>" + date
                                     });
 
                                     break;
