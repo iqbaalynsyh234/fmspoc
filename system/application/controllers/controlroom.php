@@ -70,376 +70,580 @@ class controlroom extends Base
     }
 
 	// New condition + pisah table report
-    function search()
-    {
-        $company = $this->input->post('company');
-        $location = $this->input->post('location');
-        $datein = $this->input->post('date');
-        $shift = $this->input->post('shift');
-        $date = date("Y-m-d", strtotime($datein));
-        if (date("Y-m-d") < $date) {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Date Not Found", "total" => 0, "data" => array()));
-            exit();
+    function search(){
+        ini_set('display_errors', 1);
+        //ini_set('memory_limit', '2G');
+        if (! isset($this->sess->user_type))
+        {
+            redirect(base_url());
         }
-        $lastdate = date("Y-m-t", strtotime($datein));
-        $year = date("Y", strtotime($datein));
-        $month = date("m", strtotime($datein));
-        $day = date('d', strtotime($datein));
-        $day++;
-        $jmlday = strlen($day);
-        if ($jmlday == 1) {
-            $day = "0" . $day;
-        }
-        $next = $year . "-" . $month . "-" . $day;
 
-        if ($next > $lastdate) {
-            if ($month == 12) {
-                $y = $year + 1;
-                $next = $y . "-01-01";
-            } else {
-                $m = $month + 1;
-                $jmlmonth = strlen($m);
-                if ($jmlmonth == 1) {
-                    $m = "0" . $m;
-                }
-                $next = $year . "-" . $m . "-01";
-            }
-        }
-        $arraydate = array("date" => $date, "next date" => $next, "last date" => $lastdate);
+        $company       = $this->input->post("company");
+        $startdate     = $this->input->post("startdate");
+        $enddate       = $this->input->post("enddate");
+        $periode       = $this->input->post("periode");
+        $violation     = $this->input->post("violation");
+        // $reporttype = $this->input->post("reporttype");
+        $reporttype = 0;
+        $alarmtypefromaster = array();
 
-        $shift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17");
-        $shift21 = array("18", "19", "20", "21", "22", "23");
-        $shift22 = array("00", "01", "02", "03", "04", "05");
-        $allshift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
-        $allshift2 = array("00", "01", "02", "03", "04", "05");
-
-		$days_report = date("d", strtotime($datein));
-		$month_report = date("F", strtotime($datein));
-		$year_report = date("Y", strtotime($datein));
-		$before_status = 0;
-		$year_before = date('Y',strtotime('-1 year',strtotime($year_report)));
-
-		$report = "location_hour_";
-		$report_ritase = "location_hour_";
-
-		switch ($month_report)
-		{
-			case "January":
-            $dbtable = $report."januari_".$year_report;
-			$dbtable_ritase = $report_ritase."januari_".$year_report;
-			$dbtable_before = $report."desember_".$year_before;
-			break;
-			case "February":
-            $dbtable = $report."februari_".$year_report;
-			$dbtable_ritase = $report_ritase."februari_".$year_report;
-			$dbtable_before = $report."januari_".$year_report;
-			break;
-			case "March":
-            $dbtable = $report."maret_".$year_report;
-			$dbtable_ritase = $report_ritase."maret_".$year_report;
-			$dbtable_before = $report."februari_".$year_report;
-			break;
-			case "April":
-            $dbtable = $report."april_".$year_report;
-			$dbtable_ritase = $report_ritase."april_".$year_report;
-			$dbtable_before = $report."maret_".$year_report;
-			break;
-			case "May":
-            $dbtable = $report."mei_".$year_report;
-			$dbtable_ritase = $report_ritase."mei_".$year_report;
-			$dbtable_before = $report."april_".$year_report;
-			break;
-			case "June":
-            $dbtable = $report."juni_".$year_report;
-			$dbtable_ritase = $report_ritase."juni_".$year_report;
-			$dbtable_before = $report."mei_".$year_report;
-			break;
-			case "July":
-            $dbtable = $report."juli_".$year_report;
-			$dbtable_ritase = $report_ritase."juli_".$year_report;
-			$dbtable_before = $report."juni_".$year_report;
-			break;
-			case "August":
-            $dbtable = $report."agustus_".$year_report;
-			$dbtable_ritase = $report_ritase."agustus_".$year_report;
-			$dbtable_before = $report."juli_".$year_report;
-			break;
-			case "September":
-            $dbtable = $report."september_".$year_report;
-			$dbtable_ritase = $report_ritase."september_".$year_report;
-			$dbtable_before = $report."agustus_".$year_report;
-			break;
-			case "October":
-            $dbtable = $report."oktober_".$year_report;
-			$dbtable_ritase = $report_ritase."oktober_".$year_report;
-			$dbtable_before = $report."september_".$year_report;
-			break;
-			case "November":
-            $dbtable = $report."november_".$year_report;
-			$dbtable_ritase = $report_ritase."november_".$year_report;
-			$dbtable_before = $report."oktober_".$year_report;
-			break;
-			case "December":
-            $dbtable = $report."desember_".$year_report;
-			$dbtable_ritase = $report_ritase."desember_".$year_report;
-			$dbtable_before = $report."november_".$year_report;
-			break;
-		}
-
-        //get vehicle info
-        $this->db->select("vehicle_name,vehicle_no,company_name");
-        $this->db->order_by("company_name", "asc");
-        $this->db->where("vehicle_status <>", 3);
-
-        if ($company != 0) {
-            $this->db->where("vehicle_company", $company);
-        }
-		$this->db->where("vehicle_user_id", 4408);
-        $this->db->join("company", "vehicle_company = company_id", "left");
-        $qd = $this->db->get("vehicle");
-        $total_unit = $qd->num_rows();
-        $rd = $qd->result();
-        $total_unit_percontractor = array();
-        if ($company == 0) {
-            for ($x = 0; $x < $total_unit; $x++) {
-                if ($rd[$x]->company_name != null) {
-                    if (!isset($total_unit_percontractor[$rd[$x]->company_name])) {
-                        $total_unit_percontractor[$rd[$x]->company_name] = 1;
-                    } else {
-                        $jml = (int)$total_unit_percontractor[$rd[$x]->company_name] + 1;
-                        $total_unit_percontractor[$rd[$x]->company_name] = $jml;
-                    }
-                }
-            }
-        }
-        //end get vehicle info
-        //location selected
-        //$this->dbts = $this->load->database("webtracking_ts", true);
-		$this->dbts = $this->load->database("tensor_report", true);
-
-        $this->db->order_by("location_report_location", "asc");
-		
-		//geofence baru di submit (18 juli 2023)
-        if ($location == "STREET.0") {
-            $this->dbts->where("location_report_group", "STREET");
-            $this->dbts->where("location_report_jalur", "kosongan");
-        } else if ($location == "STREET.1") {
-            $this->dbts->where("location_report_group", "STREET");
-            $this->dbts->where("location_report_jalur", "muatan");
-        } else if ($location == "0") {
-            $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
-        } else {
-            $exp = explode(" ", $location);
-            if ($exp[0] == "ROM") {
-                //lokasi ROM
-                $this->dbts->where("location_report_location", $location);
-            } else if ($exp[0] == "PORT") {
-                //lokasi PORT
-                $this->dbts->where("location_report_group", "PORT");
-                $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
+        if ($alarmtype != "All") {
+            $alarmbymaster = $this->m_dashboardberau->getalarmbytype($alarmtype);
+            $alarmtypefromaster = array();
+            for ($i=0; $i < sizeof($alarmbymaster); $i++) {
+                $alarmtypefromaster[] = $alarmbymaster[$i]['alarm_type'];
             }
         }
 
-        if ($shift == 1) {
-            for ($s = 0; $s < count($shift1); $s++) {
-                $shift1[$s] .= ":00:00";
-            }
-            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
-            $this->dbts->where("location_report_gps_date", $date);
-            if ($company != 0) {
-                $this->dbts->where("location_report_vehicle_company", $company);
-            }
-            $this->dbts->where_in("location_report_gps_hour", $shift1);
-            $this->dbts->order_by("location_report_gps_hour", "asc");
-            $this->dbts->order_by("location_report_company_name", "asc");
-            $result = $this->dbts->get($dbtable);
-            $data = $result->result_array();
-            $nr = $result->num_rows();
-        } else if ($shift == 2) {
-            for ($s = 0; $s < count($shift21); $s++) {
-                $shift21[$s] .= ":00:00";
-            }
-            for ($s = 0; $s < count($shift22); $s++) {
-                $shift22[$s] .= ":00:00";
-            }
-            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
-            $this->dbts->where("location_report_gps_date", $date);
-            if ($company != 0) {
-                $this->dbts->where("location_report_vehicle_company", $company);
-            }
-            $this->dbts->where_in("location_report_gps_hour", $shift21);
-            $this->dbts->order_by("location_report_gps_hour", "asc");
-            $this->dbts->order_by("location_report_company_name", "asc");
-            $result = $this->dbts->get($dbtable);
-            $data1 = $result->result_array();
-            $nr1 = $result->num_rows();
-            $this->dbts->distinct();
-            $this->db->order_by("location_report_location", "asc");
-            
-			//geofence baru di submit (18 juli 2023)
-			if ($location == "STREET.0") {
-                $this->dbts->where("location_report_group", "STREET");
-                $this->dbts->where("location_report_jalur", "kosongan");
-            } else if ($location == "STREET.1") {
-                $this->dbts->where("location_report_group", "STREET");
-                $this->dbts->where("location_report_jalur", "muatan");
-            } else if ($location == "0") {
-                $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
-            } else {
-                $exp = explode(" ", $location);
-                if ($exp[0] == "ROM") {
-                    //lokasi ROM
-                    $this->dbts->where("location_report_location", $location);
-                } else if ($exp[0] == "PORT") {
-                    //lokasi PORT
-                    $this->dbts->where("location_report_group", "PORT");
-                    $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
-                }
-            }
-			
-			
-            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
-            $this->dbts->where("location_report_gps_date", $next);
-            if ($company != 0) {
-                $this->dbts->where("location_report_vehicle_company", $company);
-            }
-            $this->dbts->where_in("location_report_gps_hour", $shift22);
-            $this->dbts->order_by("location_report_gps_hour", "asc");
-            $this->dbts->order_by("location_report_company_name", "asc");
-            $result = $this->dbts->get($dbtable);
-            $data2 = $result->result_array();
-            $nr2 = $result->num_rows();
-            $data = array_merge($data1, $data2);
-            $nr = $nr1 +  $nr2;
-        } else {
+        // echo "<pre>";
+        // var_dump($company);die();
+        // echo "<pre>";
 
-            for ($s = 0; $s < count($allshift1); $s++) {
-                $allshift1[$s] .= ":00:00";
+        //get vehicle
+        $user_id         = $this->sess->user_id;
+        $user_level      = $this->sess->user_level;
+        $user_company    = $this->sess->user_company;
+        $user_subcompany = $this->sess->user_subcompany;
+        $user_group      = $this->sess->user_group;
+        $user_subgroup   = $this->sess->user_subgroup;
+        $user_parent     = $this->sess->user_parent;
+        $user_id_role    = $this->sess->user_id_role;
+        $privilegecode   = $this->sess->user_id_role;
+        $user_dblive 	   = $this->sess->user_dblive;
+        $user_id_fix     = $user_id;
+
+        // $black_list  = array("401","428","451","478","602","603","608","609","652","653","658","659",
+        // 					  "600","601","650","651"); //lane deviation & forward collation
+
+        $black_list  = array("401","451","478","608","609","652","653","658","659");
+
+        $street_register = $this->config->item('street_register');
+
+        $nowdate  = date("Y-m-d");
+        $nowday   = date("d");
+        $nowmonth = date("m");
+        $nowyear  = date("Y");
+        $lastday  = date("t");
+
+        $report     = "alarm_evidence_";
+        $report_sum = "summary_";
+
+        // print_r($periode);exit();
+
+        if($periode == "custom"){
+            // $sdate = date("Y-m-d H:i:s", strtotime("-1 Hour", strtotime($startdate." ".$shour)));
+            $sdate = date("Y-m-d H:i:s", strtotime($startdate." ".$shour));
+            $edate = date("Y-m-d H:i:s", strtotime($enddate." ".$ehour));
+        }elseif ($periode == "today") {
+            $sdate = date("Y-m-d 23:00:00", strtotime("yesterday"));
+            $edate = date("Y-m-d H:i:s");
+            $datein = date("d-m-Y", strtotime($sdate));
+        }else if($periode == "yesterday"){
+
+            $sdate1 = date("Y-m-d 00:00:00", strtotime("yesterday"));
+            $edate = date("Y-m-d 23:59:59", strtotime("yesterday"));
+            // $sdate = date("Y-m-d H:i:s", strtotime("-1 Hour", strtotime($sdate1)));
+            $sdate = date("Y-m-d H:i:s", strtotime($sdate1));
+        }else if($periode == "last7"){
+            $nowday = $nowday - 1;
+            $firstday = $nowday - 7;
+            if($nowday <= 7){
+                $firstday = 1;
             }
-            for ($s = 0; $s < count($allshift2); $s++) {
-                $allshift2[$s] .= ":00:00";
-            }
-            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
-            $this->dbts->where("location_report_gps_date", $date);
-            if ($company != 0) {
-                $this->dbts->where("location_report_vehicle_company", $company);
-            }
-            $this->dbts->where_in("location_report_gps_hour", $allshift1);
-            $this->dbts->order_by("location_report_gps_hour", "asc");
-            $this->dbts->order_by("location_report_company_name", "asc");
-            $result = $this->dbts->get($dbtable);
-            $data1 = $result->result_array();
-            $nr1 = $result->num_rows();
-            $this->dbts->distinct();
-            $this->db->order_by("location_report_location", "asc");
-			
-			//geofence baru di submit (18 juli 2023)
-            if ($location == "STREET.0") {
-                $this->dbts->where("location_report_group", "STREET");
-                $this->dbts->where("location_report_jalur", "kosongan");
-            } else if ($location == "STREET.1") {
-                $this->dbts->where("location_report_group", "STREET");
-                $this->dbts->where("location_report_jalur", "muatan");
-            } else if ($location == "0") {
-                $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
-            } else {
-                $exp = explode(" ", $location);
-                if ($exp[0] == "ROM") {
-                    //lokasi ROM
-                    $this->dbts->where("location_report_location", $location);
-                } else if ($exp[0] == "PORT") {
-                    //lokasi PORT
-                    $this->dbts->where("location_report_group", "PORT");
-                    $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
-                }
-            }
-			
-            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
-            $this->dbts->where("location_report_gps_date", $next);
-            if ($company != 0) {
-                $this->dbts->where("location_report_vehicle_company", $company);
-            }
-            $this->dbts->where_in("location_report_gps_hour", $allshift2);
-            $this->dbts->order_by("location_report_gps_hour", "asc");
-            $this->dbts->order_by("location_report_company_name", "asc");
-            $result = $this->dbts->get($dbtable);
-            $data2 = $result->result_array();
-            $nr2 = $result->num_rows();
-            $data = array_merge($data1, $data2);
-            $nr = $nr1 +  $nr2;
+
+            /*if($firstday > $nowday){
+                $firstday = 1;
+            }*/
+
+            $sdate = date("Y-m-d H:i:s ", strtotime($nowyear."-".$nowmonth."-".$firstday." "."00:00:00"));
+            $edate = date("Y-m-d H:i:s", strtotime($nowyear."-".$nowmonth."-".$nowday." "."23:59:59"));
+
+        }
+        else if($periode == "last30"){
+            $firstday = "1";
+            $sdate = date("Y-m-d H:i:s ", strtotime($nowyear."-".$nowmonth."-".$firstday." "."00:00:00"));
+            $edate = date("Y-m-d H:i:s", strtotime($nowyear."-".$nowmonth."-".$lastday." "."23:59:59"));
+        }
+        else{
+            $sdate = date("Y-m-d H:i:s", strtotime($startdate." ".$shour));
+            $edate = date("Y-m-d H:i:s", strtotime($enddate." ".$ehour));
         }
 
-        if ($nr > 0) {
-            $data_fix = array();
-            $dhour = array();
-            $dcompany = array();
-            $dlocation = array();
-            $c = array();
-            $l = array();
-            for ($i = 0; $i < $nr; $i++) {
-                $exp = explode(":", $data[$i]['location_report_gps_hour']);
+        // print_r($sdate." ".$edate);exit();
 
-                if (!isset($hour[$exp[0]])) {
-                    $hour[$exp[0]] = 1;
-                    $dhour[] = $exp[0];
-                }
-                if (!isset($c[$data[$i]['location_report_company_name']])) {
+        $m1 = date("F", strtotime($sdate));
+        $m2 = date("F", strtotime($edate));
+        $year = date("Y", strtotime($sdate));
+        $year2 = date("Y", strtotime($edate));
+        $rows = array();
+        $total_q = 0;
 
-                    $c[$data[$i]['location_report_company_name']] = $data[$i]['location_report_company_name'];
-                    $dcompany[] = $c[$data[$i]['location_report_company_name']];
-                }
-                if (!isset($l[$data[$i]['location_report_location']])) {
+        $error = "";
+        $rows_summary = "";
 
-                    $l[$data[$i]['location_report_location']] = $data[$i]['location_report_location'];
-                    $dlocation[] = $l[$data[$i]['location_report_location']];
+        if ($vehicle == "")
+        {
+            $error .= "- Invalid Vehicle. Silahkan Pilih salah satu kendaraan! \n";
+        }
+        if ($m1 != $m2)
+        {
+            $error .= "- Invalid Date. Tanggal Report yang dipilih harus dalam bulan yang sama! \n";
+        }
+
+        if ($year != $year2)
+        {
+            $error .= "- Invalid Year. Tanggal Report yang dipilih harus dalam tahun yang sama! \n";
+        }
+
+        if ($alarmtype == "")
+        {
+            $error .= "- Please Select Alarm Type! \n";
+        }
+
+        switch ($m1)
+        {
+            case "January":
+            $dbtable = $report."januari_".$year;
+            $dbtable_sum = $report_sum."januari_".$year;
+            break;
+            case "February":
+            $dbtable = $report."februari_".$year;
+            $dbtable_sum = $report_sum."februari_".$year;
+            break;
+            case "March":
+            $dbtable = $report."maret_".$year;
+            $dbtable_sum = $report_sum."maret_".$year;
+            break;
+            case "April":
+            $dbtable = $report."april_".$year;
+            $dbtable_sum = $report_sum."april_".$year;
+            break;
+            case "May":
+            $dbtable = $report."mei_".$year;
+            $dbtable_sum = $report_sum."mei_".$year;
+            break;
+            case "June":
+            $dbtable = $report."juni_".$year;
+            $dbtable_sum = $report_sum."juni_".$year;
+            break;
+            case "July":
+            $dbtable = $report."juli_".$year;
+            $dbtable_sum = $report_sum."juli_".$year;
+            break;
+            case "August":
+            $dbtable = $report."agustus_".$year;
+            $dbtable_sum = $report_sum."agustus_".$year;
+            break;
+            case "September":
+            $dbtable = $report."september_".$year;
+            $dbtable_sum = $report_sum."september_".$year;
+            break;
+            case "October":
+            $dbtable = $report."oktober_".$year;
+            $dbtable_sum = $report_sum."oktober_".$year;
+            break;
+            case "November":
+            $dbtable = $report."november_".$year;
+            $dbtable_sum = $report_sum."november_".$year;
+            break;
+            case "December":
+            $dbtable = $report."desember_".$year;
+            $dbtable_sum = $report_sum."desember_".$year;
+            break;
+        }
+
+        // echo "<pre>";
+        // var_dump($vehicle.'-'.$company.'-'.$privilegecode);die();
+        // echo "<pre>";
+
+        $this->dbtrip = $this->load->database("tensor_report", true);
+
+        if ($company != "all") {
+            $this->dbtrip->where("alarm_report_vehicle_company", $company);
+        }
+
+            if($vehicle == "all"){
+                if($privilegecode == 0){
+                    $this->dbtrip->where("alarm_report_vehicle_user_id", $user_id_fix);
+                }else if($privilegecode == 1){
+                    $this->dbtrip->where("alarm_report_vehicle_user_id", $user_parent);
+                }else if($privilegecode == 2){
+                    $this->dbtrip->where("alarm_report_vehicle_user_id", $user_parent);
+                }else if($privilegecode == 3){
+                    $this->dbtrip->where("alarm_report_vehicle_user_id", $user_parent);
+                }else if($privilegecode == 4){
+                    $this->dbtrip->where("alarm_report_vehicle_user_id", $user_parent);
+                }else if($privilegecode == 5){
+          // echo "<pre>";
+          // var_dump($user_company);die();
+          // echo "<pre>";
+                    $this->dbtrip->where("alarm_report_vehicle_company", $user_company);
+                }else if($privilegecode == 6){
+                    $this->dbtrip->where("alarm_report_vehicle_company", $user_company);
+                }else{
+                    $this->dbtrip->where("alarm_report_vehicle_company",99999);
                 }
-                // $data_fix[$exp[0]][$data[$i]['location_report_company_name']][$data[$i]['location_report_location']] = array("vehicle" => $data[$i]['location_report_vehicle_no']);
-                if (!isset($data_fix[$exp[0]][$data[$i]['location_report_company_name']])) {
-                    $data_fix[$exp[0]][$data[$i]['location_report_company_name']] = array();
-                    $d = array(
-                        "company" => $data[$i]['location_report_company_name'],
-                        "vehicle" => $data[$i]['location_report_vehicle_no'],
-                        "location" => $data[$i]['location_report_location'],
-                        "hour" => $exp[0]
-                    );
-                    array_push($data_fix[$exp[0]][$data[$i]['location_report_company_name']], $d);
-                } else {
-                    $d = array(
-                        "company" => $data[$i]['location_report_company_name'],
-                        "vehicle" => $data[$i]['location_report_vehicle_no'],
-                        "location" => $data[$i]['location_report_location'],
-                        "hour" => $exp[0]
-                    );
-                    array_push($data_fix[$exp[0]][$data[$i]['location_report_company_name']], $d);
-                }
-                if (!isset($unit_location[$data[$i]['location_report_vehicle_no']])) {
-                    $unit_location[$data[$i]['location_report_vehicle_no']] = $data[$i]['location_report_vehicle_no'];
-                }
-                $data[$i]['hour'] = $exp[0];
+            }else{
+                // $vehicledevice = explode("@", $vehicle);
+                // echo "<pre>";
+                // var_dump($vehicle);die();
+                // echo "<pre>";
+                $this->dbtrip->where("alarm_report_imei", $vehicle);
             }
 
-            echo json_encode(array(
-                "code" => 200,
-                "error" => false,
-                "msg" => "success",
-                "data" => $data, //data mentah dari source data untuk compare data fix
-                "total_unit_location" => count($unit_location), //total unit dilokasi terpilih
-                "total_unit" => $total_unit, //total unit semua kontraktor atau perkontraktor dipilih
-                "total_unit_per_contractor" => $total_unit_percontractor, //total unit tiap kontraktor
-                "data_hour" => $dhour, //data jam
-                "data_company" => $dcompany, //data kontraktor
-                "data_location" => $dlocation, //data lokasi
-                "data_fix" => $data_fix, //data fix
-                "length_company" => count($dcompany), //jumlah kontraktor
-                "length_location" => count($dlocation), //jumlah lokasi
-                "length_hour" => count($dhour) //jumlah jam
-            ));
-        } else {
-            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
+        $this->dbtrip->where("alarm_report_media", 0); //photo
+        $this->dbtrip->where("alarm_report_start_time >=", $sdate);
+
+        $nowday            = date("d");
+        $end_day_fromEdate = date("d", strtotime($edate));
+
+        if ($nowday == $end_day_fromEdate) {
+            $edate = date("Y-m-d H:i:s");
         }
+
+        $this->dbtrip->where("alarm_report_start_time <=", $edate);
+        if($km != ""){
+            $this->dbtrip->where("alarm_report_location_start", "KM ".$km);
+        }
+
+        if ($alarmtype != "All") {
+            $this->dbtrip->where_in('alarm_report_type', $alarmtypefromaster); //$alarmtype $alarmbymaster[0]['alarm_type']
+        }
+        $this->dbtrip->where_not_in('alarm_report_type', $black_list);
+        //$this->dbtrip->where("alarm_report_speed_status",1);		//buka untuk trial evalia
+        //$this->dbtrip->like("alarm_report_location_start", "KM"); //buka untuk trial evalia
+        $this->dbtrip->where("alarm_report_gpsstatus !=","");
+        // $this->dbtrip->where_in('alarm_report_location_start', $street_register); //new filter
+        $this->dbtrip->order_by("alarm_report_start_time","asc");
+        $this->dbtrip->group_by("alarm_report_start_time");
+        $q = $this->dbtrip->get($dbtable);
+        //
+        // echo "<pre>";
+        // var_dump($q->result_array());die();
+        // echo "<pre>";
+
+        if ($q->num_rows>0)
+        {
+            $rows = $q->result_array();
+            $thisreport = $rows;
+        }else{
+            $error .= "- No Data Alarm ! \n";
+        }
+
+        if ($error != "")
+        {
+            $callback['error'] = true;
+            $callback['message'] = $error;
+
+            echo json_encode($callback);
+            return;
+        }
+
+        $datafix = array();
+        for ($j=0; $j < sizeof($thisreport); $j++) {
+            $alarmreportnamefix = "";
+            $alarmreporttype = $thisreport[$j]['alarm_report_type'];
+                if ($alarmreporttype == 626) {
+                    $alarmreportnamefix = "Driver Undetected Alarm Level One Start";
+                }elseif ($alarmreporttype == 627) {
+                    $alarmreportnamefix = "Driver Undetected Alarm Level Two Start";
+                }elseif ($alarmreporttype == 702) {
+                    $alarmreportnamefix = "Distracted Driving Alarm Level One Start";
+                }elseif ($alarmreporttype == 703) {
+                    $alarmreportnamefix = "Distracted Driving Alarm Level Two Start";
+                }elseif ($alarmreporttype == 752) {
+                    $alarmreportnamefix = "Distracted Driving Alarm Level One End";
+                }elseif ($alarmreporttype == 753) {
+                    $alarmreportnamefix = "Distracted Driving Alarm Level Two End";
+                }else {
+                    $alarmreportnamefix = $thisreport[$j]['alarm_report_name'];
+                }
+
+        if (isset($thisreport[$j]['alarm_report_id_cr'])) {
+          $alarm_report_id_cr =  $thisreport[$j]['alarm_report_id_cr'];
+        }else {
+          $alarm_report_id_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_name_cr'])) {
+          $alarm_report_name_cr =  $thisreport[$j]['alarm_report_name_cr'];
+        }else {
+          $alarm_report_name_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_sid_cr'])) {
+          $alarm_report_sid_cr =  $thisreport[$j]['alarm_report_sid_cr'];
+        }else {
+          $alarm_report_sid_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_statusintervention_cr'])) {
+          $alarm_report_statusintervention_cr =  $thisreport[$j]['alarm_report_statusintervention_cr'];
+        }else {
+          $alarm_report_statusintervention_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_intervention_category_cr'])) {
+          $alarm_report_intervention_category_cr =  $thisreport[$j]['alarm_report_intervention_category_cr'];
+        }else {
+          $alarm_report_intervention_category_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_fatiguecategory_cr'])) {
+          $alarm_report_fatiguecategory_cr =  $thisreport[$j]['alarm_report_fatiguecategory_cr'];
+        }else {
+          $alarm_report_fatiguecategory_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_note_cr'])) {
+          $alarm_report_note_cr =  $thisreport[$j]['alarm_report_note_cr'];
+        }else {
+          $alarm_report_note_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_datetime_cr'])) {
+          $alarm_report_datetime_cr =  $thisreport[$j]['alarm_report_datetime_cr'];
+        }else {
+          $alarm_report_datetime_cr = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_truefalse_up'])) {
+          $alarm_report_truefalse_up =  $thisreport[$j]['alarm_report_truefalse_up'];
+        }else {
+          $alarm_report_truefalse_up = "";
+        }
+
+        if (isset($thisreport[$j]['alarm_report_note_up'])) {
+          $alarm_report_note_up =  $thisreport[$j]['alarm_report_note_up'];
+        }else {
+          $alarm_report_note_up = "";
+        }
+
+                array_push($datafix, array(
+                    "alarm_report_id"                       => $thisreport[$j]['alarm_report_id'],
+                    "alarm_report_vehicle_id"               => $thisreport[$j]['alarm_report_vehicle_id'],
+                    "alarm_report_vehicle_no"               => $thisreport[$j]['alarm_report_vehicle_no'],
+                    "alarm_report_vehicle_name"             => $thisreport[$j]['alarm_report_vehicle_name'],
+                    "alarm_report_name"                     => $alarmreportnamefix,
+                    "alarm_report_start_time"               => $thisreport[$j]['alarm_report_start_time'],
+                    "alarm_report_end_time"                 => $thisreport[$j]['alarm_report_end_time'],
+                    "alarm_report_coordinate_start"         => $thisreport[$j]['alarm_report_coordinate_start'],
+                    "alarm_report_coordinate_end"           => $thisreport[$j]['alarm_report_coordinate_end'],
+                    "alarm_report_location_start"           => $thisreport[$j]['alarm_report_location_start'],
+                    "alarm_report_speed" 			              => $thisreport[$j]['alarm_report_speed'],
+                    "alarm_report_speed_time" 		          => $thisreport[$j]['alarm_report_speed_time'],
+                    "alarm_report_speed_status" 	          => $thisreport[$j]['alarm_report_speed_status'],
+                    "alarm_report_jalur" 	                  => $thisreport[$j]['alarm_report_jalur'],
+                    "alarm_report_id_cr"                    => $alarm_report_id_cr,
+                    "alarm_report_name_cr"                  => $alarm_report_name_cr,
+                    "alarm_report_sid_cr"                   => $alarm_report_sid_cr,
+                    "alarm_report_statusintervention_cr"    => $alarm_report_statusintervention_cr,
+                    "alarm_report_intervention_category_cr" => $alarm_report_intervention_category_cr,
+                    "alarm_report_fatiguecategory_cr"       => $alarm_report_fatiguecategory_cr,
+                    "alarm_report_note_cr"                  => $alarm_report_note_cr,
+                    "alarm_report_datetime_cr"              => $alarm_report_datetime_cr,
+                    "alarm_report_truefalse_up"             => $alarm_report_truefalse_up,
+                    "alarm_report_note_up"                  => $alarm_report_note_up,
+                    ));
+        }
+
+    // echo "<pre>";
+    // var_dump($datafix);die();
+    // echo "<pre>";
+
+        $this->params['content']   = $datafix;
+    $this->params['alarmtype'] = $alarmtype;
+        $html                      = $this->load->view('newdashboard/dashboardberau/postevent/v_dashboard_postevent_result', $this->params, true);
+        $callback["html"]          = $html;
+        $callback["report"]        = $datafix;
+
+        echo json_encode($callback);
     }
 
-	//existing
+    function search_violation()
+    {
+        ini_set('memory_limit', "5G");
+		ini_set('max_execution_time', 300); // 5 minutes
+		// $datein    = $this->input->post("date");
+		$company = $this->input->post("company");
+		$violation = $this->input->post("violation");
+		// $date = date("Y-m-d", strtotime($datein));
+		// $month = date("F", strtotime($datein));
+		// $monthforparam = date("m", strtotime($datein));
+		// $year = date("Y", strtotime($datein));
+		$report     = "alarm_evidence_";
+		$overspeed  = "overspeed_";
+		$periode = $this->input->post("periode");
+		$year = date("Y");
+		$mont = date("m");
+		$nowday = date("d");
+		$err = false;
+		$msg = '';
+		if ($periode == "today") {
+			$sdate = date("Y-m-d 00:00:00");
+			$edate = date("Y-m-d H:i:s");
+			$datein = date("d-m-Y", strtotime($sdate));
+		} else if ($periode == "yesterday") {
+			$sdate = date("Y-m-d 00:00:00", strtotime("yesterday"));
+			$edate = date("Y-m-d 23:59:59", strtotime("yesterday"));
+			$datein = date("d-m-Y", strtotime("yesterday"));
+		} else if ($periode == "last7") {
+			$year = date("Y");
+			$mont = date("m");
+			$nowday = date("d");
+			$firstday = $nowday - 7;
+			if ($nowday <= 7) {
+				$firstday = 1;
+			}
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-" . $firstday));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} else if ($periode == "this_month") {
+			$firstday = "1";
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-1"));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} else if ($periode == "custom") {
+			$sdate = $this->input->post("sdate");
+			$edate = $this->input->post("edate");
+			$sdate = date("Y-m-d 00:00:00", strtotime($sdate));
+			$edate = date("Y-m-d 23:59:59", strtotime($edate));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+			$diff = strtotime($edate) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			$diff = strtotime(date("Y-m-d")) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			if ($company == "all") {
+				$diff = strtotime($edate) - strtotime($sdate);
+				if ($diff > 604800) {
+					$err = true;
+					$msg = "Maximum date range for all contractors is 7 days!";
+				}
+			}
+			$diff1 = date("m", strtotime($sdate));
+			$diff2 = date("m", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same month!";
+			}
+			$diff1 = date("Y", strtotime($sdate));
+			$diff2 = date("Y", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same year!";
+			}
+		}
+
+		$month = date("F", strtotime($sdate));
+		$year = date("Y", strtotime($sdate));
+
+		if ($err == true) {
+			$callback['error'] = true;
+			$callback['message'] = $msg;
+			echo json_encode($callback);
+			return;
+		}
+
+		switch ($month) {
+			case "January":
+				$dbtable = $report . "januari_" . $year;
+				$dboverspeed = $overspeed . "januari_" . $year;
+				break;
+			case "February":
+				$dbtable = $report . "februari_" . $year;
+				$dboverspeed = $overspeed . "februari_" . $year;
+				break;
+			case "March":
+				$dbtable = $report . "maret_" . $year;
+				$dboverspeed = $overspeed . "maret_" . $year;
+				break;
+			case "April":
+				$dbtable = $report . "april_" . $year;
+				$dboverspeed = $overspeed . "april_" . $year;
+				break;
+			case "May":
+				$dbtable = $report . "mei_" . $year;
+				$dboverspeed = $overspeed . "mei_" . $year;
+				break;
+			case "June":
+				$dbtable = $report . "juni_" . $year;
+				$dboverspeed = $overspeed . "juni_" . $year;
+				break;
+			case "July":
+				$dbtable = $report . "juli_" . $year;
+				$dboverspeed = $overspeed . "juli_" . $year;
+				break;
+			case "August":
+				$dbtable = $report . "agustus_" . $year;
+				$dboverspeed = $overspeed . "agustus_" . $year;
+				break;
+			case "September":
+				$dbtable = $report . "september_" . $year;
+				$dboverspeed = $overspeed . "september_" . $year;
+				break;
+			case "October":
+				$dbtable = $report . "oktober_" . $year;
+				$dboverspeed = $overspeed . "oktober_" . $year;
+				break;
+			case "November":
+				$dbtable = $report . "november_" . $year;
+				$dboverspeed = $overspeed . "november_" . $year;
+				break;
+			case "December":
+				$dbtable = $report . "desember_" . $year;
+				$dboverspeed = $overspeed . "desember_" . $year;
+				break;
+		}
+
+		$input = array(
+			'date_start' => $sdate,
+			'date_end' => $edate,
+			'db' => $dbtable,
+			'db_overspeed' => $dboverspeed
+		);
+		//violation data
+
+		$rviolation = $this->getViolation(); //ambil master data violation alrmmaster
+		$dataviolation = array(); //untuk simpan data violation
+		$master_violation = array(); //untuk simpan data violation format 2
+		$allviolation = array(); //untuk simpan id violation
+		$nr = count($rviolation);
+		if ($nr > 0) {
+			for ($i = 0; $i < $nr; $i++) {
+				$dataviolation[$rviolation[$i]["alarmmaster_id"]] = $rviolation[$i]["alarmmaster_name"];
+				$master_violation[$i] = $rviolation[$i]["alarmmaster_name"];
+				array_push($allviolation, $rviolation[$i]["alarmmaster_id"]);
+			}
+		}
+
+		$dataalarmtype = array(); //untuk query where_in
+		$dataviolationalarmtype = array(); //untuk ditampilkan di view
+		if ($violation != "all") {
+			$alarmtype = $this->getAlarmtype($violation);
+		} else {
+			$alarmtype = $this->getAlarmtype(null, $allviolation);
+		}
+		$nr = count($alarmtype);
+		if ($nr > 0) {
+			for ($i = 0; $i < $nr; $i++) {
+				if (!isset($dataviolationalarmtype[$alarmtype[$i]["alarm_type"]])) {
+					if ($violation == "all") {
+						$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$alarmtype[$i]["alarm_master_id"]];
+					} else {
+						$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$violation];
+					}
+				}
+				array_push($dataalarmtype, $alarmtype[$i]["alarm_type"]);
+			}
+		}
+    }
+
 	function search_bk()
     {
         $company = $this->input->post('company');
@@ -745,23 +949,23 @@ class controlroom extends Base
         $this->params["onload"]         = 1;
         if ($privilegecode == 1) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_superuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
         } elseif ($privilegecode == 2) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
@@ -897,7 +1101,7 @@ class controlroom extends Base
 		$end = new DateTime($edate_tgl);
 
 		//config monthly report
-		$this->dbts = $this->load->database("webtracking_ts", true);
+		$this->dbts = $this->load->database("tensor_report", true);
 		$this->dbts->order_by("monthly_date","asc");
 		$this->dbts->select("monthly_date");
 		$this->dbts->where("monthly_date >=", $sdate_tgl);
@@ -908,7 +1112,7 @@ class controlroom extends Base
 
 		//print_r(print_r($data_fix));exit();
 
-		$this->dbts = $this->load->database("webtracking_ts", true);
+		$this->dbts = $this->load->database("tensor_report", true);
 		//$this->dbts->select("hour_name,hour_time");
 		if($shift != "all"){
 			$this->dbts->where("hour_shift", $shift);
@@ -917,7 +1121,7 @@ class controlroom extends Base
 		$this->dbts->where("hour_month",$month);
 		$this->dbts->where("hour_year",$year);
 		$this->dbts->where("hour_company",$company);
-        $result = $this->dbts->get("ts_location_hour_summary");
+        $result = $this->dbts->get("alarm_evidence");
         $datahour = $result->result();
 
 		//print_r($datahour);exit();
@@ -935,7 +1139,7 @@ class controlroom extends Base
 		$this->params["company_name"]  = $company_name;
 		$this->params["total_unit"]  = $total_unit;
 
-		$html                    = $this->load->view('newdashboard/truckhour/v_truck_month_result', $this->params, true);
+		$html                    = $this->load->view('newdashboard/controlroom/v_controlroom_result', $this->params, true);
 		$callback["html"]        = $html;
 
 		echo json_encode($callback);
@@ -959,31 +1163,31 @@ class controlroom extends Base
         $this->params["onload"]         = 1;
         if ($privilegecode == 1) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_superuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
         } elseif ($privilegecode == 2) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_dev_truck_hour_backup1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }
@@ -1018,23 +1222,23 @@ class controlroom extends Base
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour_v1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_truck_hour_v1', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour_v1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_truck_hour_v1', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour_v1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour_v1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_truck_hour_v1', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_hour_v1', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }
@@ -1225,31 +1429,31 @@ class controlroom extends Base
         $this->params["onload"]         = 1;
         if ($privilegecode == 1) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_superuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
         } elseif ($privilegecode == 2) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }
@@ -1437,31 +1641,31 @@ class controlroom extends Base
         $this->params["onload"]         = 1;
         if ($privilegecode == 1) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_superuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
         } elseif ($privilegecode == 2) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
         } elseif ($privilegecode == 3) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
         } elseif ($privilegecode == 4) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
         } elseif ($privilegecode == 5) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom_summary', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }
@@ -1802,7 +2006,7 @@ class controlroom extends Base
   		$this->params["company_name"] = $company_name;
   		$this->params["total_unit"]   = $total_unit;
 
-  		$html                         = $this->load->view('newdashboard/truckhour/v_truck_month_summary_result', $this->params, true);
+  		$html                         = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
   		$callback["html"]             = $html;
       $callback["data"]             = $dataforshow;
       $callback["datahari"]         = $totalhari;

@@ -1974,7 +1974,7 @@ class Hse extends Base
 		$this->params['master_violation'] = $master_violation; //master company format 2
 
 
-		$html                    = $this->load->view('newdashboard/hse/v_daily_violation2_result', $this->params, true);
+		$html = $this->load->view('newdashboard/hse/v_daily_violation2_result', $this->params, true);
 
 
 

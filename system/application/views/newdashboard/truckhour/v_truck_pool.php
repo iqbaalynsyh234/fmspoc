@@ -351,8 +351,6 @@
             }
         }
 
-
-
         function creatchart(response, charttotal) {
             var total_vehicle = $("#total_vehicle").val();
             var data = response.data;
