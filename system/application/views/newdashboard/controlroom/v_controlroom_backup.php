@@ -270,63 +270,66 @@
     <div id="chart2" style="width: 50%; float: left;"></div>
 
     <script>
-        // Mengambil data dari PHP menggunakan AJAX
-        $.ajax({
-            url: 'getData.php',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                // Menginisialisasi dua set data
-                var dataSeries1 = [];
-                var dataSeries2 = [];
-
-                // Memparset data dari JSON
-                data.forEach(function(item) {
-                    dataSeries1.push({
-                        name: item.label,
-                        y: parseFloat(item.value)
-                    });
-
-                    dataSeries2.push({
-                        name: item.label,
-                        y: parseFloat(item.value) * 2 // Contoh pengolahan data
-                    });
-                });
-
-                // Membuat grafik Highcharts dalam satu layout
-                Highcharts.chart('container', {
-                    chart: {
-                        type: 'column'
-                    },
-                    title: {
-                        text: 'Dua Grafik dari MySQL'
-                    },
-                    xAxis: {
-                        type: 'category'
-                    },
-                    yAxis: {
-                        title: {
-                            text: 'Nilai'
-                        }
-                    },
-                    series: [{
-                        name: 'Grafik 1',
-                        data: dataSeries1
-                    }, {
-                        name: 'Grafik 2',
-                        data: dataSeries2
-                    }],
-                    legend: {
-                        enabled: true
-                    }
-                });
+        // Data untuk grafik pertama
+        var data1 = {
+            chart: {
+               type: 'spline'
+             },
+            title: {
+                text: 'DASHBOARD TRUE FALSE ALARM'
             },
-            error: function(xhr, status, error) {
-                console.error("Error:", error);
-            }
-        });
-    </script>
-    
+            subtitle: {
+                text: 'Periode<br>'
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: {
+		            day: '%e of %b'
+		        }
+            series: [{
+               name: 'True',
+               type: 'spline',
+               color: 'green',
+               data: [5, 10, 15, 20, 25]
+                 }, {
+               name: 'False',
+               type: 'spline',
+               color: 'black',
+               data: [5, 10, 15, 20, 25]
+             }]
+         }   
+        };
+
+        // Data untuk grafik kedua
+        var data2 = {
+            title: {
+                text: 'DASHBOARD LEAD TIME INTERVENSI'
+            },
+            subtitle: {
+                text: 'Periode<br>' + date
+            },
+            xAxis: {
+                categories: <?php echo json_encode($day);?>,
+            },
+            series: [{
+               name: 'True',
+               type: 'spline',
+               color: 'green',
+               data: <?php echo json_encode($value);?>
+                 }, {
+               name: 'False',
+               color: 'black',
+               type: 'spline',
+               data: <?php echo json_encode($value);?>
+             }]
+        };
+
+        // Membuat grafik pertama
+        Highcharts.chart('chart1', data1);
+
+        // Membuat grafik kedua
+        Highcharts.chart('chart2', data2);
+     </script>
      <script type="text/javascript">
         function showinfo(sdate = null, edate = null, company = null, company_name = null, violation = null) {
         // return false;
