@@ -1542,9 +1542,6 @@ class Hse extends Base
 						}
 
 
-
-
-
 						if (!isset($hour[$h[0]])) {
 							$hour[$h[0]] = 1;
 							$dhour[] = $h[0];

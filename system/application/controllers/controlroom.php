@@ -305,7 +305,6 @@ class controlroom extends Base
                 }
             }
 			
-			
             $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
             $this->dbts->where("location_report_gps_date", $next);
             if ($company != 0) {
@@ -446,6 +445,800 @@ class controlroom extends Base
             echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
         }
     }
+
+    function search_violation2()
+	{
+		ini_set('memory_limit', "5G");
+		ini_set('max_execution_time', 300); // 5 minutes
+		// $datein    = $this->input->post("date");
+		$company = $this->input->post("company");
+		$violation = $this->input->post("violation");
+		$vehicle = $this->input->post("vehicle");
+		// $date = date("Y-m-d", strtotime($datein));
+		// $month = date("F", strtotime($datein));
+		// $monthforparam = date("m", strtotime($datein));
+		// $year = date("Y", strtotime($datein));
+		$report     = "alarm_evidence_";
+		$overspeed  = "overspeed_hour_";
+		$periode = $this->input->post("periode");
+		$year = date("Y");
+		$mont = date("m");
+		$nowday = date("d");
+		$err = false;
+		$msg = '';
+		if ($periode == "today") {
+			$sdate = date("Y-m-d 00:00:00");
+			$edate = date("Y-m-d H:i:s");
+			$datein = date("d-m-Y", strtotime($sdate));
+		} else if ($periode == "yesterday") {
+			$sdate = date("Y-m-d 00:00:00", strtotime("yesterday"));
+			$edate = date("Y-m-d 23:59:59", strtotime("yesterday"));
+			$datein = date("d-m-Y", strtotime("yesterday"));
+		} else if ($periode == "last7") {
+			$year = date("Y");
+			$mont = date("m");
+			$nowday = date("d");
+			$firstday = $nowday - 7;
+			if ($nowday <= 7) {
+				$firstday = 1;
+			}
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-" . $firstday));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} else if ($periode == "this_month") {
+			$firstday = "1";
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-1"));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} else if ($periode == "custom") {
+			$sdate = $this->input->post("sdate");
+			$edate = $this->input->post("edate");
+			$sdate = date("Y-m-d 00:00:00", strtotime($sdate));
+			$edate = date("Y-m-d 23:59:59", strtotime($edate));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+			$diff = strtotime($edate) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			$diff = strtotime(date("Y-m-d")) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			/* if ($company == "all") {
+				$diff = strtotime($edate) - strtotime($sdate);
+				if ($diff > 604800) {
+					$err = true;
+					$msg = "Maximum date range for all contractors is 7 days!";
+				}
+			} */
+			$diff1 = date("m", strtotime($sdate));
+			$diff2 = date("m", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same month!";
+			}
+			$diff1 = date("Y", strtotime($sdate));
+			$diff2 = date("Y", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same year!";
+			}
+		}
+
+		$month = date("F", strtotime($sdate));
+		$year = date("Y", strtotime($sdate));
+
+		if ($err == true) {
+			$callback['error'] = true;
+			$callback['message'] = $msg;
+			echo json_encode($callback);
+			return;
+		}
+
+		switch ($month) {
+			case "January":
+				$dbtable = $report . "januari_" . $year;
+				$dboverspeed = $overspeed . "januari_" . $year;
+				break;
+			case "February":
+				$dbtable = $report . "februari_" . $year;
+				$dboverspeed = $overspeed . "februari_" . $year;
+				break;
+			case "March":
+				$dbtable = $report . "maret_" . $year;
+				$dboverspeed = $overspeed . "maret_" . $year;
+				break;
+			case "April":
+				$dbtable = $report . "april_" . $year;
+				$dboverspeed = $overspeed . "april_" . $year;
+				break;
+			case "May":
+				$dbtable = $report . "mei_" . $year;
+				$dboverspeed = $overspeed . "mei_" . $year;
+				break;
+			case "June":
+				$dbtable = $report . "juni_" . $year;
+				$dboverspeed = $overspeed . "juni_" . $year;
+				break;
+			case "July":
+				$dbtable = $report . "juli_" . $year;
+				$dboverspeed = $overspeed . "juli_" . $year;
+				break;
+			case "August":
+				$dbtable = $report . "agustus_" . $year;
+				$dboverspeed = $overspeed . "agustus_" . $year;
+				break;
+			case "September":
+				$dbtable = $report . "september_" . $year;
+				$dboverspeed = $overspeed . "september_" . $year;
+				break;
+			case "October":
+				$dbtable = $report . "oktober_" . $year;
+				$dboverspeed = $overspeed . "oktober_" . $year;
+				break;
+			case "November":
+				$dbtable = $report . "november_" . $year;
+				$dboverspeed = $overspeed . "november_" . $year;
+				break;
+			case "December":
+				$dbtable = $report . "desember_" . $year;
+				$dboverspeed = $overspeed . "desember_" . $year;
+				break;
+		}
+
+
+		$input = array(
+			'date_start' => $sdate,
+			'date_end' => $edate,
+			'db' => $dbtable,
+			'db_overspeed' => $dboverspeed
+		);
+		//violation data
+
+		$rviolation = $this->getViolation(); //ambil master data violation alrmmaster
+		$dataviolation = array(); //untuk simpan data violation
+		$master_violation = array(); //untuk simpan data violation format 2
+		$allviolation = array(); //untuk simpan id violation
+		$nr = count($rviolation);
+		if ($nr > 0) {
+			for ($i = 0; $i < $nr; $i++) {
+				$dataviolation[$rviolation[$i]["alarmmaster_id"]] = $rviolation[$i]["alarmmaster_name"];
+				$master_violation[$i] = $rviolation[$i]["alarmmaster_name"];
+				array_push($allviolation, $rviolation[$i]["alarmmaster_id"]);
+			}
+		}
+
+		$dataviolationalarmtype = array(); // Initialize the array
+		$dataalarmtype = array(); // Initialize the array
+
+		if (!empty($alarmtype)) {
+    		$nr = count($alarmtype);
+    		for ($i = 0; $i < $nr; $i++) {
+        if (isset($alarmtype[$i]) && isset($alarmtype[$i]["alarm_type"])) {
+            if (!isset($dataviolationalarmtype[$alarmtype[$i]["alarm_type"]])) {
+                	if ($violation == "all") {
+                    	$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$alarmtype[$i]["alarm_master_id"]];
+                	} else {
+                   		 $dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$violation];
+                	}
+           	 		}
+            	array_push($dataalarmtype, $alarmtype[$i]["alarm_type"]);
+       	 	}
+   	 	}
+	 }
+
+
+		//vehicle data
+		$this->db->select("vehicle_name,vehicle_no,vehicle_company");
+		$this->db->where("vehicle_status <>", 3);
+
+		if ($company != "all") {
+			$this->db->where("vehicle_company", $company);
+		}
+		$qd = $this->db->get("vehicle");
+		$total_unit = $qd->num_rows();
+		$rd = $qd->result();
+		$total_unit_percontractor = array();
+		for ($x = 0; $x < $total_unit; $x++) {
+			if ($rd[$x]->vehicle_company != null) {
+				if (!isset($total_unit_percontractor[$rd[$x]->vehicle_company])) {
+					$total_unit_percontractor[$rd[$x]->vehicle_company] = 1;
+				} else {
+					$jml = (int)$total_unit_percontractor[$rd[$x]->vehicle_company] + 1;
+					$total_unit_percontractor[$rd[$x]->vehicle_company] = $jml;
+				}
+			}
+		}
+
+		$s_date = date("Y-m-d", strtotime($sdate));
+		$nowdate = date("Y-m-d");
+		// $action = false;
+		// if ($company == 'all') {
+		// 	if ($s_date == $e_date) {
+		// 		if ($s_date != $nowdate) {
+		// 			$action = true;
+		// 		} else {
+		// 			$action = false;
+		// 		}
+		// 	} else {
+		// 		$action = false;
+		// 	}
+		// } else {
+		if ($s_date != $nowdate) {
+			$action = true;
+		} else {
+			$action = false;
+		}
+		// }
+
+		// if ($action == true) {
+		// 	//vehicle operational data
+		// 	$dt_operational = $this->getDTOperational($company, $s_date, $e_date);
+		// 	$this->params['total_operational_units'] = $dt_operational['units']; //total violation units
+		// }
+		$this->params['ratio'] = $action;
+
+
+
+		$data = array();
+		$data2 = array();
+
+		if ($vehicle != "all") {
+			$exp = explode("/", $vehicle);
+			$vehicle_imei = $exp[0];
+			$vehicle_device = $exp[1];
+
+			$companydata = $this->getcompany_bycreator(null, $exp[2]);
+			$count_company = 1;
+			$company = $exp[2];
+			$data_company[$exp[2]] = $companydata[0]->company_name;
+			$master_company[0] = $companydata[0]->company_name;
+			$company = $exp[2];
+			$opposite_company[$companydata[0]->company_name] = $exp[2];
+
+			if ($violation == "6") {
+				$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle_device, $sdate, $edate);
+			} else {
+				if ($violation == "all") {
+					$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle_device, $sdate, $edate);
+					$data = $this->getSecurityEvidence($dbtable, $company, $vehicle_imei, $violation, $dataalarmtype, $sdate, $edate);
+				} else {
+					//$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle_device, $sdate, $edate); //additional dari ovs alert bisa kebuka untuk all mitra 1 bulan
+					$data = $this->getSecurityEvidence($dbtable, $company, $vehicle_imei, $violation, $dataalarmtype, $sdate, $edate);
+				}
+			}
+		} else {
+			//company data
+			$companydata = $this->getcompany_bycreator(4408);
+			$data_company = array(); //format 1
+			$opposite_company = array(); //kebalikan format 1
+			$master_company = array(); //format 2
+			if ($company != "all") {
+				$exp = explode("@", $company);
+				$count_company = 1;
+				$company = $exp[0];
+				$data_company[$exp[0]] = $exp[1];
+				$master_company[0] = $exp[1];
+				$company = $exp[0];
+				$opposite_company[$exp[1]] = $exp[0];
+			} else {
+				$count_company = count($companydata);
+				for ($i = 0; $i < $count_company; $i++) {
+					$data_company[$companydata[$i]->company_id] = $companydata[$i]->company_name;
+					$opposite_company[$companydata[$i]->company_name] = $companydata[$i]->company_id;
+					$master_company[$i] = $companydata[$i]->company_name;
+				}
+			}
+
+			if ($violation == "6") {
+				$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle, $sdate, $edate);
+			} else {
+				if ($violation == "all") {
+					$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle, $sdate, $edate);
+					$data = $this->getSecurityEvidence($dbtable, $company, $vehicle, $violation, $dataalarmtype, $sdate, $edate);
+				} else {
+					//$data2 = $this->getOverspeed2($dboverspeed, $company, $vehicle_device, $sdate, $edate); //additional dari ovs alert bisa kebuka untuk all mitra 1 bulan
+					$data = $this->getSecurityEvidence($dbtable, $company, $vehicle, $violation, $dataalarmtype, $sdate, $edate);
+				}
+			}
+		}
+
+		/* print_r($sdate." ".$edate);
+		print_r($data2);exit(); */
+
+		$numrows = count($data);
+		// $numrows = 0;
+		$numrows2 = count($data2);
+		// $numrows2 = 0;
+		$total_data = 0;
+		$data_fix = array();
+		$data_table = array();
+		$dhour = array();
+		$dcompany = array();
+		$dviolation = array();
+		$c = array();
+		$l = array();
+		$seleksi_data = array(); //untuk seleksi multiple data yang sama
+		$seleksi_data_table = array(); //untuk seleksi multiple data yang sama
+		$seleksi_data_overspeed = array(); //untuk seleksi multiple data yang sama
+		$seleksi_data_table_overspeed = array(); //untuk seleksi multiple data yang sama
+		$total_violation_units = array();
+		$seleksi_unit = array();
+		$top_ten = array();
+		if ($company == "all") {
+			if ($numrows > 0) {
+				for ($i = 0; $i < $numrows; $i++) {
+					if (isset($data_company[$data[$i]['alarm_report_vehicle_company']])) {
+						$datetime = $data[$i]['alarm_report_start_time'];
+						//$datetime = date("Y-m-d H:i:s", strtotime($data[$i]['alarm_report_start_time']) + (60 * 60));
+						$vehiclen = $data[$i]['alarm_report_vehicle_no'];
+						$loction = $data[$i]['alarm_report_location_start'];
+						$cmpny = $data_company[$data[$i]['alarm_report_vehicle_company']];
+						$exp = explode(" ", $datetime);
+						$h = explode(":", $exp[1]);
+						// if (!isset($total_violation_units[$cmpny][$vehiclen])) {
+						// 	$total_violation_units[$cmpny][$vehiclen] = 1;
+						// }
+
+						if (!isset($total_violation_units[$cmpny])) {
+							// $units[$cmpny][$vhicle] = 1;
+							$total_violation_units[$cmpny] = 1;
+							$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+						} else {
+							if (!isset($seleksi_unit[$exp[0]][$cmpny][$vehiclen])) {
+								$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+								$total_violation_units[$cmpny] += 1;
+							}
+						}
+
+						if (isset($dataviolationalarmtype[$data[$i]['alarm_report_type']])) {
+							$vltion = $dataviolationalarmtype[$data[$i]['alarm_report_type']];
+						} else {
+							$vltion = $data[$i]['alarm_report_type'];
+						}
+
+
+						if (!isset($hour[$h[0]])) {
+							$hour[$h[0]] = 1;
+							$dhour[] = $h[0];
+						}
+						if (!isset($c[$cmpny])) {
+							$c[$cmpny] = $cmpny;
+							$dcompany[] = $cmpny;
+						}
+						if (!isset($l[$vltion])) {
+
+							$l[$vltion] = $vltion;
+							$dviolation[] = $vltion;
+						}
+						$d = array(
+							"company" => $cmpny,
+							"vehicle" => $vehiclen,
+							"violation" => $vltion,
+							"hour" => $h[0],
+						);
+
+						if (!isset($data_fix[$h[0]][$cmpny])) {
+							$data_fix[$h[0]][$cmpny] = array();
+							array_push($data_fix[$h[0]][$cmpny], $d);
+							if ($vltion == "Driver Abnormal") {
+								$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+							} else {
+								$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+							}
+							if (!isset($top_ten[$vltion][$vehiclen])) {
+								$top_ten[$vltion][$vehiclen] = 1;
+							} else {
+								$top_ten[$vltion][$vehiclen] += 1;
+							}
+							$total_data++;
+						} else {
+							if ($vltion == "Driver Abnormal") {
+								if (!isset($seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]])) {
+									$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+									array_push($data_fix[$h[0]][$cmpny], $d);
+									if (!isset($top_ten[$vltion][$vehiclen])) {
+										$top_ten[$vltion][$vehiclen] = 1;
+									} else {
+										$top_ten[$vltion][$vehiclen] += 1;
+									}
+									$total_data++;
+								}
+							} else {
+								if (!isset($seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction])) {
+									$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+									array_push($data_fix[$h[0]][$cmpny], $d);
+									if (!isset($top_ten[$vltion][$vehiclen])) {
+										$top_ten[$vltion][$vehiclen] = 1;
+									} else {
+										$top_ten[$vltion][$vehiclen] += 1;
+									}
+									$total_data++;
+								}
+							}
+						}
+
+						if (!isset($data_table[$vltion][$cmpny])) {
+							$data_table[$vltion][$cmpny] = array();
+							array_push($data_table[$vltion][$cmpny], $d);
+							if ($vltion == "Driver Abnormal") {
+								$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+							} else {
+								$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+							}
+						} else {
+							if ($vltion == "Driver Abnormal") {
+								if (!isset($seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]])) {
+									$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+									array_push($data_table[$vltion][$cmpny], $d);
+								}
+							} else {
+								if (!isset($seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction])) {
+									$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+									array_push($data_table[$vltion][$cmpny], $d);
+								}
+							}
+						}
+					}
+				}
+			}
+			if ($numrows2 > 0) {
+				for ($i = 0; $i < $numrows2; $i++) {
+					if (isset($data_company[$data2[$i]['overspeed_report_vehicle_company']])) {
+						// $datetime = $data[$i]['overspeed_report_gps_time'];
+						$datetime = $data2[$i]['overspeed_report_gps_time'];
+						// $datetime = date("Y-m-d H:i:s", strtotime($datetime) + (60 * 60));
+						$cmpny = $data_company[$data2[$i]['overspeed_report_vehicle_company']];
+
+						$vltion = "Overspeed";
+						$vehiclen = $data2[$i]['overspeed_report_vehicle_no'];
+						$locationn = $data2[$i]['overspeed_report_location'];
+						$exp = explode(" ", $datetime);
+						$h = explode(":", $exp[1]);
+
+						// if (!isset($total_violation_units[$cmpny][$vehiclen])) {
+						// 	$total_violation_units[$cmpny][$vehiclen] = 1;
+						// }
+
+
+						if (!isset($total_violation_units[$cmpny])) {
+							// $units[$cmpny][$vhicle] = 1;
+							$total_violation_units[$cmpny] = 1;
+							$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+						} else {
+							if (!isset($seleksi_unit[$exp[0]][$cmpny][$vehiclen])) {
+								$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+								$total_violation_units[$cmpny] += 1;
+							}
+						}
+
+
+						if (!isset($hour[$h[0]])) {
+							$hour[$h[0]] = 1;
+							$dhour[] = $h[0];
+						}
+						if (!isset($c[$cmpny])) {
+							$c[$cmpny] = $cmpny;
+							$dcompany[] = $cmpny;
+						}
+						if (!isset($l[$vltion])) {
+							$l[$vltion] = $vltion;
+							$dviolation[] = $vltion;
+						}
+						$d = array(
+							"company" => $cmpny,
+							"vehicle" => $vehiclen,
+							"violation" => $vltion,
+							"hour" => $h[0],
+							"level" => $data2[$i]['overspeed_report_level']
+						);
+
+						if (!isset($data_fix[$h[0]][$cmpny])) {
+							$data_fix[$h[0]][$cmpny] = array();
+							array_push($data_fix[$h[0]][$cmpny], $d);
+							$seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+
+							if (!isset($top_ten[$vltion][$vehiclen])) {
+								$top_ten[$vltion][$vehiclen] = 1;
+							} else {
+								$top_ten[$vltion][$vehiclen] += 1;
+							}
+							$total_data++;
+						} else {
+							if (!isset($seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn])) {
+								$seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+								array_push($data_fix[$h[0]][$cmpny], $d);
+								if (!isset($top_ten[$vltion][$vehiclen])) {
+									$top_ten[$vltion][$vehiclen] = 1;
+								} else {
+									$top_ten[$vltion][$vehiclen] += 1;
+								}
+								$total_data++;
+							}
+						}
+
+						if (!isset($data_table[$vltion][$cmpny])) {
+							$data_table[$vltion][$cmpny] = array();
+							array_push($data_table[$vltion][$cmpny], $d);
+							$seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+						} else {
+							if (!isset($seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn])) {
+								$seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+								array_push($data_table[$vltion][$cmpny], $d);
+							}
+						}
+					}
+				}
+			}
+			if ($total_data == 0) {
+				$callback['error'] = true;
+				$callback['message'] = "Data Empty!";
+				$callback['input'] = $input;
+				echo json_encode($callback);
+				return;
+			}
+		} else {
+			if ($numrows > 0) {
+				for ($i = 0; $i < $numrows; $i++) {
+					if (isset($data_company[$data[$i]['alarm_report_vehicle_company']])) {
+						$datetime = $data[$i]['alarm_report_start_time'];
+						//$datetime = date("Y-m-d H:i:s", strtotime($data[$i]['alarm_report_start_time']) + (60 * 60));
+						$vehiclen = $data[$i]['alarm_report_vehicle_no'];
+						$loction = $data[$i]['alarm_report_location_start'];
+						$cmpny = $data_company[$data[$i]['alarm_report_vehicle_company']];
+
+						if (isset($dataviolationalarmtype[$data[$i]['alarm_report_type']])) {
+							$vltion = $dataviolationalarmtype[$data[$i]['alarm_report_type']];
+						} else {
+							$vltion = $data[$i]['alarm_report_type'];
+						}
+						$exp = explode(" ", $datetime);
+						$h = explode(":", $exp[1]);
+
+						// if (!isset($total_violation_units[$cmpny][$vehiclen])) {
+						// 	$total_violation_units[$cmpny][$vehiclen] = 1;
+						// }
+
+						if (!isset($total_violation_units[$cmpny])) {
+							// $units[$cmpny][$vhicle] = 1;
+							$total_violation_units[$cmpny] = 1;
+							$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+						} else {
+							if (!isset($seleksi_unit[$exp[0]][$cmpny][$vehiclen])) {
+								$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+								$total_violation_units[$cmpny] += 1;
+							}
+						}
+
+
+						if (!isset($hour[$h[0]])) {
+							$hour[$h[0]] = 1;
+							$dhour[] = $h[0];
+						}
+						if (!isset($c[$cmpny])) {
+							$c[$cmpny] = $cmpny;
+							$dcompany[] = $cmpny;
+						}
+						if (!isset($l[$vltion])) {
+
+							$l[$vltion] = $vltion;
+							$dviolation[] = $vltion;
+						}
+						$d = array(
+							"company" => $cmpny,
+							"vehicle" => $vehiclen,
+							"violation" => $vltion,
+							"hour" => $h[0],
+						);
+
+						if (!isset($data_fix[$h[0]][$vltion])) {
+							$data_fix[$h[0]][$vltion] = array();
+							array_push($data_fix[$h[0]][$vltion], $d);
+							if ($vltion == "Driver Abnormal") {
+								$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+							} else {
+								$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+							}
+							if (!isset($top_ten[$vltion][$vehiclen])) {
+								$top_ten[$vltion][$vehiclen] = 1;
+							} else {
+								$top_ten[$vltion][$vehiclen] += 1;
+							}
+							$total_data++;
+						} else {
+							if ($vltion == "Driver Abnormal") {
+								if (!isset($seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]])) {
+									$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+									array_push($data_fix[$h[0]][$vltion], $d);
+									if (!isset($top_ten[$vltion][$vehiclen])) {
+										$top_ten[$vltion][$vehiclen] = 1;
+									} else {
+										$top_ten[$vltion][$vehiclen] += 1;
+									}
+									$total_data++;
+								}
+							} else {
+								if (!isset($seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction])) {
+									$seleksi_data[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+									array_push($data_fix[$h[0]][$vltion], $d);
+									if (!isset($top_ten[$vltion][$vehiclen])) {
+										$top_ten[$vltion][$vehiclen] = 1;
+									} else {
+										$top_ten[$vltion][$vehiclen] += 1;
+									}
+									$total_data++;
+								}
+							}
+						}
+
+						if (!isset($data_table[$vltion][$cmpny])) {
+							$data_table[$vltion][$cmpny] = array();
+							array_push($data_table[$vltion][$cmpny], $d);
+							if ($vltion == "Driver Abnormal") {
+								$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+							} else {
+								$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+							}
+						} else {
+							if ($vltion == "Driver Abnormal") {
+								if (!isset($seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]])) {
+									$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]] = 1;
+									array_push($data_table[$vltion][$cmpny], $d);
+								}
+							} else {
+								if (!isset($seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction])) {
+									$seleksi_data_table[$vltion][$vehiclen][$exp[0]][$h[0]][$loction] = 1;
+									array_push($data_table[$vltion][$cmpny], $d);
+								}
+							}
+						}
+					}
+				}
+			}
+			if ($numrows2 > 0) {
+				for ($i = 0; $i < $numrows2; $i++) {
+					if (isset($data_company[$data2[$i]['overspeed_report_vehicle_company']])) {
+						// $datetime = $data[$i]['overspeed_report_gps_time'];
+						$datetime = $data2[$i]['overspeed_report_gps_time'];
+						// $datetime = date("Y-m-d H:i:s", strtotime($datetime) + (60 * 60));
+						$cmpny = $data_company[$data2[$i]['overspeed_report_vehicle_company']];
+
+						$vltion = "Overspeed";
+						$vehiclen = $data2[$i]['overspeed_report_vehicle_no'];
+						$locationn = $data2[$i]['overspeed_report_location'];
+						$exp = explode(" ", $datetime);
+						$h = explode(":", $exp[1]);
+
+						// if (!isset($total_violation_units[$cmpny][$vehiclen])) {
+						// 	$total_violation_units[$cmpny][$vehiclen] = 1;
+						// }
+
+
+						if (!isset($total_violation_units[$cmpny])) {
+							// $units[$cmpny][$vhicle] = 1;
+							$total_violation_units[$cmpny] = 1;
+							$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+						} else {
+							if (!isset($seleksi_unit[$exp[0]][$cmpny][$vehiclen])) {
+								$seleksi_unit[$exp[0]][$cmpny][$vehiclen] = 1;
+								$total_violation_units[$cmpny] += 1;
+							}
+						}
+
+
+						if (!isset($hour[$h[0]])) {
+							$hour[$h[0]] = 1;
+							$dhour[] = $h[0];
+						}
+						if (!isset($c[$cmpny])) {
+							$c[$cmpny] = $cmpny;
+							$dcompany[] = $cmpny;
+						}
+						if (!isset($l[$vltion])) {
+							$l[$vltion] = $vltion;
+							$dviolation[] = $vltion;
+						}
+						$d = array(
+							"company" => $cmpny,
+							"vehicle" => $vehiclen,
+							"violation" => $vltion,
+							"hour" => $h[0]
+						);
+
+						if (!isset($data_fix[$h[0]][$vltion])) {
+							$data_fix[$h[0]][$vltion] = array();
+							array_push($data_fix[$h[0]][$vltion], $d);
+							if (!isset($top_ten[$vltion][$vehiclen])) {
+								$top_ten[$vltion][$vehiclen] = 1;
+							} else {
+								$top_ten[$vltion][$vehiclen] += 1;
+							}
+							$seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+							$total_data++;
+						} else {
+							if (!isset($seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn])) {
+								$seleksi_data_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+								array_push($data_fix[$h[0]][$vltion], $d);
+								if (!isset($top_ten[$vltion][$vehiclen])) {
+									$top_ten[$vltion][$vehiclen] = 1;
+								} else {
+									$top_ten[$vltion][$vehiclen] += 1;
+								}
+								$total_data++;
+							}
+						}
+
+						if (!isset($data_table[$vltion][$cmpny])) {
+							$data_table[$vltion][$cmpny] = array();
+							array_push($data_table[$vltion][$cmpny], $d);
+							$seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+						} else {
+							if (!isset($seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn])) {
+								$seleksi_data_table_overspeed[$vltion][$vehiclen][$exp[0]][$h[0]][$locationn] = 1;
+								array_push($data_table[$vltion][$cmpny], $d);
+							}
+						}
+					}
+				}
+			}
+			if ($total_data == 0) {
+				$callback['error'] = true;
+				$callback['message'] = "Data Empty!";
+				echo json_encode($callback);
+				return;
+			}
+		}
+
+
+		$input = array(
+			"company" => $company,
+			"violation" => $violation,
+			"vehicle" => $vehicle,
+			"periode" => $periode,
+			"date_start" => $sdate,
+			"date_end" => $edate
+		);
+
+		sort($dhour);
+
+		/* var_dump($total_violation_units);
+		 exit(); */
+
+		//print_r($top_ten);exit();
+
+		$this->params['input'] = $input;
+		$this->params['sdate'] = $sdate;
+		$this->params['edate'] = $edate;
+		$this->params['opposite_company'] = $opposite_company;
+		$this->params['total_data'] = $total_data;
+		$this->params['date'] = $datein;
+		$this->params['data_hour'] = $dhour; //data hour dari source
+		$this->params['data_company'] = $dcompany; //data company dari source
+		$this->params['data_alarm'] = $dviolation; //data violation dari source
+
+		$this->params['data_fix'] = $data_fix;
+		$this->params['data_table'] = $data_table;
+		$this->params['top_violation'] = $top_ten; //master company format 2
+		$this->params['master_company'] = $master_company; //master company format 2
+		$this->params['total_violation_units'] = $total_violation_units; //total violation units
+		$this->params['master_vehicle'] = $total_unit_percontractor; //master vehicle
+		$this->params['master_violation'] = $master_violation; //master company format 2
+
+
+		$html = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
+
+
+
+		$callback['error'] = false;
+		$callback['input'] = $input;
+		$callback['data_fix'] = $data_fix;
+		$callback["html"]        = $html;
+
+		echo json_encode($callback);
+	}
+
 	function search_bk()
     {
         $company = $this->input->post('company');

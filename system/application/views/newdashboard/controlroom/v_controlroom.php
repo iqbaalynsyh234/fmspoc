@@ -1,4 +1,6 @@
-<script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <!-- Mengimpor pustaka Highcharts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
     <!-- Mengimpor modul tambahan untuk layout -->
     <script src="https://code.highcharts.com/modules/layout.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -8,7 +10,7 @@
     <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
-
+    
     <style type="text/css">
     /* edit style datepicker*/
     .datetimepicker {
@@ -53,7 +55,8 @@
         pointer-events: none;
     }
     </style>
-    <script>
+
+<script>
     function frmsearch_onsubmit() {
         var company = $("#company").val();
         // var vehicle = $("#vehicle").val();
@@ -89,7 +92,7 @@
         jQuery("#result").hide();
         jQuery("#loader").show();
 
-        jQuery.post("<?= base_url(); ?>hse/search_violation2", jQuery("#frmsearch").serialize(),
+        jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
             function(r) {
                 if (r.error) {
                     console.log(r);
@@ -135,6 +138,10 @@
     }
   </script>
 
+
+</head>
+<body>
+    
     <!-- start sidebar menu -->
     <div class="sidebar-container">
         <?= $sidebar; ?>
@@ -142,16 +149,16 @@
     <!-- end sidebar menu -->
 
     <!-- start page content -->
-<div class="page-content-wrapper">
-    <div class="page-content">
-        <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
+    <div class="page-content-wrapper">
+         <div class="page-content">
+            <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
             <div class="row">
                 <div class="col-md-12 col-sm-12">
                     <div class="panel" id="panel_form">
                         <div class="card-header" style="text-align: center; font-size:large;">
                             <b>Dashboard Profile Control Room</b>
                         </div>
-                       <div class="panel-body" id="bar-parent10">
+                        <div class="panel-body" id="bar-parent10">
                             <div class="form-group row">
                                 <div class="col-lg-2 col-md-2">
                                     <!--<select id="contractor" name="contractor" class="form-control select2" >-->
@@ -239,156 +246,64 @@
 
             </div>
          </form>
-         <div id="result"></div>
 
-
-
-        <div id="modalStatev" class="modal" style="height: 100%;">
-            <div class="modal-content-state">
-                <div class="row">
-                    <div class="col-md-10">
-                        <p class="modalTitleforAll" id="modalStateTitle">
-                            <button type="button" name="button" id="export_xcel_info" class="btn btn-primary btn-sm">Export Excel</button>
-                        </p>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn btn-danger btn-sm" onclick="closemodalviolation()">X</div>
-                    </div>
-                </div>
-                <div id="modalStateContent">
-                    <table class="table table-striped table-bordered" id="contenttable" style="font-size: 12px; text-align:center;">
-
-                    </table>
-                </div>
-                <div id="divtoUpload" style="display:none"></div>
-            </div>
-        </div>
-
-    <!-- Container untuk grafik pertama -->
     <div id="chart1" style="width: 50%; float: left;"></div>
-    <!-- Container untuk grafik kedua -->
     <div id="chart2" style="width: 50%; float: left;"></div>
 
     <script>
-        // Mengambil data dari PHP menggunakan AJAX
-        $.ajax({
-            url: 'getData.php',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                // Menginisialisasi dua set data
-                var dataSeries1 = [];
-                var dataSeries2 = [];
-
-                // Memparset data dari JSON
-                data.forEach(function(item) {
-                    dataSeries1.push({
-                        name: item.label,
-                        y: parseFloat(item.value)
-                    });
-
-                    dataSeries2.push({
-                        name: item.label,
-                        y: parseFloat(item.value) * 2 // Contoh pengolahan data
-                    });
-                });
-
-                // Membuat grafik Highcharts dalam satu layout
-                Highcharts.chart('container', {
-                    chart: {
-                        type: 'column'
-                    },
-                    title: {
-                        text: 'Dua Grafik dari MySQL'
-                    },
-                    xAxis: {
-                        type: 'category'
-                    },
-                    yAxis: {
-                        title: {
-                            text: 'Nilai'
-                        }
-                    },
-                    series: [{
-                        name: 'Grafik 1',
-                        data: dataSeries1
-                    }, {
-                        name: 'Grafik 2',
-                        data: dataSeries2
-                    }],
-                    legend: {
-                        enabled: true
-                    }
-                });
+        // Data untuk grafik pertama
+        var dataChart1 = {
+    chart: {
+        type: 'spline'
+    },
+    title: {
+        text: 'DASHBOARD TRUE FALSE ALARM'
+    },
+    subtitle: {
+                text: 'Periode<br>'
+    },
+    xAxis: {
+                categories: [5, 10, 15, 20, 25, 30],
             },
-            error: function(xhr, status, error) {
-                console.error("Error:", error);
-            }
-        });
+    series: [{
+            name: 'True',
+             data: [5, 10, 15, 20, 25, 30],
+            color: 'green', // Warna hijau untuk "True"
+        }, {
+            name: 'False',
+            data: [5, 10, 15, 20, 25, 30],
+             color: 'black', // Warna hitam untuk "False"
+        }]
+    };
+
+
+        // Data untuk grafik kedua
+        var dataChart2 = {
+            chart: {
+                type: 'spline'
+            },
+            title: {
+                text: 'DASHBOARD LEAD TIME INTERVENSI'
+            },
+            subtitle: {
+                text: 'Periode<br>'
+            },
+            series: [{
+                name: 'True',
+                color: 'green',
+                data: [30, 25, 20, 15, 10, 5],
+               name: 'False',
+               color: 'black',
+               type: 'spline',
+               data:  [30, 25, 20, 15, 10, 5]
+            }]
+        };
+
+        // Membuat grafik pertama di div dengan id "chart1"
+        Highcharts.chart('chart1', dataChart1);
+
+        // Membuat grafik kedua di div dengan id "chart2"
+        Highcharts.chart('chart2', dataChart2);
     </script>
-    
-     <script type="text/javascript">
-        function showinfo(sdate = null, edate = null, company = null, company_name = null, violation = null) {
-        // return false;
-        $("#contenttable").html("");
-        var data = {
-            start_date: sdate,
-            end_date: edate,
-            company: company,
-            company_name: company_name,
-            violation: violation
-        }
-        jQuery("#loader2").show();
-        jQuery.post("<?= base_url(); ?>hse/infodetail2", data,
-            function(r) {
-                if (r.error) {
-                    jQuery("#loader2").hide();
-                    alert("Data empty!");
-                    return;
-                } else {
-                    $("#contenttable").html(r.html);
-                    jQuery("#loader2").hide();
-                    $("#modalStatev").show();
-                }
-            }, "json"
-        );
-    }
-
-    function closemodalviolation() {
-        $("#modalStatev").hide();
-    }
-
-    $(document).ready(function() {
-        //edit datepicker
-        $(".glyphicon-arrow-right").html(">>");
-        $(".glyphicon-arrow-left").html("<<");
-
-        // buildTable($table);
-        // $("#modalStatev").show();
-        page(0);
-
-        //export excel
-        jQuery("#export_xcel_info").click(function() {
-            var title = $("#contenttable .titletable").html();
-            var isi = $('#modalStateContent').html();
-            $("#divtoUpload").html(isi);
-            $("#divtoUpload .attachment").html("link");
-            // $("#divtoUpload .attachment2").html("link video");
-            var myBlob = new Blob([$("#divtoUpload").html()], {
-                type: 'application/vnd.ms-excel'
-            });
-            var url = window.URL.createObjectURL(myBlob);
-            var a = document.createElement("a");
-            document.body.appendChild(a);
-            a.href = url;
-            a.download = title + ".xls";
-            a.click();
-            setTimeout(function() {
-                window.URL.revokeObjectURL(url);
-            }, 0);
-
-        });
-
-     });
-  </script>
-</script>
+</body>
+</html>
