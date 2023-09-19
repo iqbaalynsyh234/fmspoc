@@ -1352,26 +1352,24 @@ class Hse extends Base
 			}
 		}
 
-		$dataalarmtype = array(); //untuk query where_in
-		$dataviolationalarmtype = array(); //untuk ditampilkan di view
-		if ($violation != "all") {
-			$alarmtype = $this->getAlarmtype($violation);
-		} else {
-			$alarmtype = $this->getAlarmtype(null, $allviolation);
-		}
-		$nr = count($alarmtype);
-		if ($nr > 0) {
-			for ($i = 0; $i < $nr; $i++) {
-				if (!isset($dataviolationalarmtype[$alarmtype[$i]["alarm_type"]])) {
-					if ($violation == "all") {
-						$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$alarmtype[$i]["alarm_master_id"]];
-					} else {
-						$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$violation];
-					}
-				}
-				array_push($dataalarmtype, $alarmtype[$i]["alarm_type"]);
-			}
-		}
+		$dataviolationalarmtype = array(); // Initialize the array
+		$dataalarmtype = array(); // Initialize the array
+
+		if (!empty($alarmtype)) {
+    		$nr = count($alarmtype);
+    		for ($i = 0; $i < $nr; $i++) {
+        if (isset($alarmtype[$i]) && isset($alarmtype[$i]["alarm_type"])) {
+            if (!isset($dataviolationalarmtype[$alarmtype[$i]["alarm_type"]])) {
+                	if ($violation == "all") {
+                    	$dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$alarmtype[$i]["alarm_master_id"]];
+                	} else {
+                   		 $dataviolationalarmtype[$alarmtype[$i]["alarm_type"]] = $dataviolation[$violation];
+                	}
+           	 		}
+            	array_push($dataalarmtype, $alarmtype[$i]["alarm_type"]);
+       	 	}
+   	 	}
+	 }
 
 
 		//vehicle data

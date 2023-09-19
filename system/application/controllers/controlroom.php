@@ -21,6 +21,14 @@ class controlroom extends Base
         $this->room();
     }
 
+    public function apiData($bulan){
+		$corona = new ControlroomModel();
+		$corona->where('tgl >=',"2020-{$bulan}-01");
+		$corona->where('tgl <=',"2020-{$bulan}-31");
+		$corona->orderBy('tgl','asc');
+		echo json_encode($corona->get()->getResult());
+	}
+
     function room()
     {
         if (!isset($this->sess->user_type)) {
@@ -32,7 +40,7 @@ class controlroom extends Base
         $rows_company                   = $this->get_company();
 
         $this->params["rcompany"]       = $rows_company;
-        $this->params["rlocation"]      = $this->get_location();
+        $this->params["rlocation"]       = $this->get_location();
         $this->params['code_view_menu'] = "dashboard";
 
         $this->params["header"]         = $this->load->view('newdashboard/partial/headernew', $this->params, true);
@@ -438,8 +446,6 @@ class controlroom extends Base
             echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
         }
     }
-
-	//existing
 	function search_bk()
     {
         $company = $this->input->post('company');
@@ -1245,11 +1251,11 @@ class controlroom extends Base
             $this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
         } elseif ($privilegecode == 6) {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_pool', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }

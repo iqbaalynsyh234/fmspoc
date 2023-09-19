@@ -1509,6 +1509,17 @@ class Dashboardmodel extends Model {
 		return $q2->result_array();
 	}
 
+	function room(){
+        $query = $this->db->query("SELECT * from alarm_envidence");
+         
+        if($query->num_rows() > 0){
+            foreach($query->result() as $data){
+                $hasil[] = $data;
+            }
+            return $hasil;
+        }
+    }
+
 	function totaldevice(){
 		$user_level      = $this->sess->user_level;
 		$user_company    = $this->sess->user_company;
