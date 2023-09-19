@@ -1,8 +1,3 @@
-
-    <!-- Mengimpor pustaka Highcharts -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <!-- Mengimpor modul tambahan untuk layout -->
-    <script src="https://code.highcharts.com/modules/layout.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
@@ -93,21 +88,31 @@
         jQuery("#loader").show();
 
         jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
-            function(r) {
-                if (r.error) {
-                    console.log(r);
-                    alert(r.message);
-                    jQuery("#loader").hide();
-                    jQuery("#result").hide();
-                    return;
-                } else {
-                    console.log(r);
-                    jQuery("#loader").hide();
-                    jQuery("#result").html(r.html);
-                    jQuery("#result").show();
-                }
-            }, "json"
-        );
+        function (r) {
+            if (r.error) {
+                console.log(r);
+                alert(r.message);
+                jQuery("#loader").hide();
+                jQuery("#result").hide();
+                return;
+            } else {
+                console.log(r);
+
+                // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
+                dataChart1.series[0].data = r.dataChart1True; // Ganti dengan data True dari hasil pencarian
+                dataChart1.series[1].data = r.dataChart1False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart1);
+
+                dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
+                dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart2', dataChart2);
+
+                jQuery("#loader").hide();
+                jQuery("#result").html(r.html);
+                jQuery("#result").show();
+            }
+          }, "json"
+      );
     }
 
     function periode_onchange() {
@@ -187,14 +192,17 @@
                                         ?>
                                     </select>
                                 </div>
-                                <div class="col-lg-2 col-md-2">
-                                        <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
-                                        <option value="0">--All Violation</option>
-                                    <?php
-                                     for ($i = 0; $i < sizeof($violationmaster); $i++) {?>
-                                     <option value=<?php echo $violationmaster[$i]["alarmmaster_id"] ?>><?php echo $violationmaster[$i]["alarmmaster_name"] ?></option>
-                                        <?php } ?>
-                                    </select>
+                                <div class="col-lg-3 col-md-3">
+                                                <select id="violation" name="violation" class="form-control select2"  >
+                                                    <option value="all">All Violation</option>
+													<option value="Call">Call</option>
+													<option value="Car Distance">Car Distance</option>
+													<option value="Distracted">Distracted</option>
+													<option value="Fatigue">Fatigue</option>
+													<option value="Smoking">Smoking</option>
+													<option value="Driver Abnormal">Driver Abnormal</option>
+													<option value="overspeed" selected>Overspeed</option>
+												</select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
                                     <!-- <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
@@ -253,27 +261,34 @@
     <script>
         // Data untuk grafik pertama
         var dataChart1 = {
-    chart: {
+        chart: {
         type: 'spline'
-    },
-    title: {
-        text: 'DASHBOARD TRUE FALSE ALARM'
-    },
-    subtitle: {
-                text: 'Periode<br>'
-    },
-    xAxis: {
-                categories: [5, 10, 15, 20, 25, 30],
-            },
-    series: [{
+             },
+         title: {
+            text: 'DASHBOARD TRUE-FALSE ALARM'
+         },
+            xAxis: {
+             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+        },
+        subtitle: {
+                text: 'Periode<br>' 
+        },
+         yAxis: {
+            title: {
+            text: 'Percentage (%)',
+         }
+        },
+            series: [{
             name: 'True',
-             data: [5, 10, 15, 20, 25, 30],
-            color: 'green', // Warna hijau untuk "True"
-        }, {
+            type: 'spline',
+            color: 'green',
+            data: [1, 3, 2, 4, 5]
+             }, {
             name: 'False',
-            data: [5, 10, 15, 20, 25, 30],
-             color: 'black', // Warna hitam untuk "False"
-        }]
+            type: 'spline',
+            color: 'black',
+            data: [5, 4, 3, 2, 1]
+            }]
     };
 
 
@@ -288,14 +303,24 @@
             subtitle: {
                 text: 'Periode<br>'
             },
-            series: [{
+            xAxis: { 
+             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+            },
+             yAxis: {
+               title: {
+                text: 'Percentage (%)',
+                }
+             },
+                series: [{
                 name: 'True',
+                type: 'spline',
                 color: 'green',
-                data: [30, 25, 20, 15, 10, 5],
-               name: 'False',
-               color: 'black',
-               type: 'spline',
-               data:  [30, 25, 20, 15, 10, 5]
+                data: [1, 3, 2, 4, 5]
+             }, {
+                name: 'False',
+                type: 'spline',
+                color: 'black',
+                data: [5, 4, 3, 2, 1]
             }]
         };
 
@@ -304,6 +329,14 @@
 
         // Membuat grafik kedua di div dengan id "chart2"
         Highcharts.chart('chart2', dataChart2);
+
+        // Mengambil data dari grafik Leadtime Intervensi
+        var leadtimeSeriesData = leadtimeChart.series[0].data;
+
+        // Menampilkan data di konsol
+        for (var i = 0; i < leadtimeSeriesData.length; i++) {
+            console.log('Hari ke-' + (i + 1) + ': ' + leadtimeSeriesData[i].y);
+        }
     </script>
 </body>
 </html>

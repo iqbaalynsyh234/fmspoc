@@ -629,7 +629,6 @@ class controlroom extends Base
    	 	}
 	 }
 
-
 		//vehicle data
 		$this->db->select("vehicle_name,vehicle_no,vehicle_company");
 		$this->db->where("vehicle_status <>", 3);
