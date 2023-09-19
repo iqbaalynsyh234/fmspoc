@@ -595,8 +595,8 @@ class controlroom extends Base
 			'db' => $dbtable,
 			'db_overspeed' => $dboverspeed
 		);
-		//violation data
 
+		//violation data
 		$rviolation = $this->getViolation(); //ambil master data violation alrmmaster
 		$dataviolation = array(); //untuk simpan data violation
 		$master_violation = array(); //untuk simpan data violation format 2
@@ -609,7 +609,6 @@ class controlroom extends Base
 				array_push($allviolation, $rviolation[$i]["alarmmaster_id"]);
 			}
 		}
-
 		$dataviolationalarmtype = array(); // Initialize the array
 		$dataalarmtype = array(); // Initialize the array
 
@@ -678,8 +677,6 @@ class controlroom extends Base
 		// 	$this->params['total_operational_units'] = $dt_operational['units']; //total violation units
 		// }
 		$this->params['ratio'] = $action;
-
-
 
 		$data = array();
 		$data2 = array();
@@ -2259,7 +2256,7 @@ class controlroom extends Base
             $this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
         } else {
             $this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-            $this->params["content"]        = $this->load->view('newdashboard/truckhour/v_truck_month_summary', $this->params, true);
+            $this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
             $this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
         }
     }

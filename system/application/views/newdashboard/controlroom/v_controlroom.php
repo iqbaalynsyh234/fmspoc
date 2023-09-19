@@ -258,7 +258,55 @@
     <div id="chart1" style="width: 50%; float: left;"></div>
     <div id="chart2" style="width: 50%; float: left;"></div>
 
+
     <script>
+        $(document).ready(function() {
+            // Panggil getDataAndRenderCharts saat halaman dimuat
+            getDataAndRenderCharts();
+
+            // Tambahkan event handler untuk tombol "Search"
+            $("#btnSearch").click(function() {
+                 page();
+             });
+         });
+
+    </script>
+
+    <script>
+             function getDataAndRenderCharts() {
+          $.ajax({
+             url: '', //url get data
+            method: 'GET', // Atur metode HTTP yang sesuai
+            success: function(data) {
+                var dataChart1True = data.dataChart1True;
+                var dataChart1False = data.dataChart1False;
+                var dataChart2True = data.dataChart2True;
+                var dataChart2False = data.dataChart2False;
+
+                dataChart1.series[0].data = dataChart1True;
+                dataChart1.series[1].data = dataChart1False;
+                Highcharts.chart('chart1', dataChart1);
+
+                dataChart2.series[0].data = dataChart2True;
+                dataChart2.series[1].data = dataChart2False;
+                Highcharts.chart('chart2', dataChart2);
+            },
+            error: function(error) {
+                console.error('Error:', error);
+                alert('Error fetching data from server');
+            }
+        });
+    }
+    </script>
+
+    <script>
+        var parsedData = []; // You can populate this array with your parsed data objects
+        // Example of populating parsedData:
+        parsedData.push({ x: 'Jan', y: 1 });
+        parsedData.push({ x: 'Feb', y: 3 });
+        parsedData.push({ x: 'Mar', y: 2 });
+        parsedData.push({ x: 'Apr', y: 4 });
+        parsedData.push({ x: 'Mei', y: 5 });
         // Data untuk grafik pertama
         var dataChart1 = {
         chart: {
@@ -268,7 +316,7 @@
             text: 'DASHBOARD TRUE-FALSE ALARM'
          },
             xAxis: {
-             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+                categories: parsedData.map(item => item.x),
         },
         subtitle: {
                 text: 'Periode<br>' 
@@ -282,8 +330,8 @@
             name: 'True',
             type: 'spline',
             color: 'green',
-            data: [1, 3, 2, 4, 5]
-             }, {
+            data: parsedData.map(item => item.y), // Extract y values from parsedData
+            }, {
             name: 'False',
             type: 'spline',
             color: 'black',
@@ -301,10 +349,10 @@
                 text: 'DASHBOARD LEAD TIME INTERVENSI'
             },
             subtitle: {
-                text: 'Periode<br>'
+                text: 'Periode<br>' 
             },
             xAxis: { 
-             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei']
+                categories: parsedData.map(item => item.x), 
             },
              yAxis: {
                title: {
@@ -315,8 +363,8 @@
                 name: 'True',
                 type: 'spline',
                 color: 'green',
-                data: [1, 3, 2, 4, 5]
-             }, {
+                data:  parsedData.map(item => item.y), // Extract y values from parsedData
+                    }, {
                 name: 'False',
                 type: 'spline',
                 color: 'black',
@@ -329,10 +377,7 @@
 
         // Membuat grafik kedua di div dengan id "chart2"
         Highcharts.chart('chart2', dataChart2);
-
-        // Mengambil data dari grafik Leadtime Intervensi
-        var leadtimeSeriesData = leadtimeChart.series[0].data;
-
+        
         // Menampilkan data di konsol
         for (var i = 0; i < leadtimeSeriesData.length; i++) {
             console.log('Hari ke-' + (i + 1) + ': ' + leadtimeSeriesData[i].y);
