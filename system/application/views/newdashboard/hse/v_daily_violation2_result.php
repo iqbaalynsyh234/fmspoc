@@ -135,7 +135,7 @@
         var master_v = '<?php echo json_encode($total_violation_units); ?>';
         var total_violation_units = JSON.parse(master_v);
         var master_v = '<?php echo json_encode($top_violation); ?>';
-        var top_violation = JSON.parse(master_v);
+        var top_violationn = JSON.parse(master_v);
 
 
         <?php if ($input['company'] == "all") {
@@ -173,7 +173,6 @@
 
 
     }
-
 
     function charttrilevel(data_fix, data_hour_fix, data_company_fix, data_violation_fix, total_data, date) {
 

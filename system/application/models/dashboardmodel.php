@@ -9,6 +9,13 @@ class Dashboardmodel extends Model {
 	$this->load->model("m_poipoolmaster");
 	}
 
+	public function getChartData() {
+        $query = $this->db->select('alarm_report_start_time, alarm_report_statusinterventation_up')
+        ->from('alarm_evidence_agustus_2023')
+        ->get();
+    	return $query->result_array();
+    }
+
 	function getvehicle_byownerforheatmap(){
 		$user_level          = $this->sess->user_level;
 		$user_company        = $this->sess->user_company;

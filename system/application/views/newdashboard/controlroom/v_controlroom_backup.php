@@ -1,14 +1,11 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
-    <!-- Mengimpor modul tambahan untuk layout -->
-    <script src="https://code.highcharts.com/modules/layout.js"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
     <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
-
+    
     <style type="text/css">
     /* edit style datepicker*/
     .datetimepicker {
@@ -53,7 +50,8 @@
         pointer-events: none;
     }
     </style>
-    <script>
+
+<script>
     function frmsearch_onsubmit() {
         var company = $("#company").val();
         // var vehicle = $("#vehicle").val();
@@ -89,22 +87,32 @@
         jQuery("#result").hide();
         jQuery("#loader").show();
 
-        jQuery.post("<?= base_url(); ?>hse/search_violation2", jQuery("#frmsearch").serialize(),
-            function(r) {
-                if (r.error) {
-                    console.log(r);
-                    alert(r.message);
-                    jQuery("#loader").hide();
-                    jQuery("#result").hide();
-                    return;
-                } else {
-                    console.log(r);
-                    jQuery("#loader").hide();
-                    jQuery("#result").html(r.html);
-                    jQuery("#result").show();
-                }
-            }, "json"
-        );
+        jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
+        function (r) {
+            if (r.error) {
+                console.log(r);
+                alert(r.message);
+                jQuery("#loader").hide();
+                jQuery("#result").hide();
+                return;
+            } else {
+                console.log(r);
+
+                // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
+                dataChart1.series[0].data = r.dataChart1True; // Ganti dengan data True dari hasil pencarian
+                dataChart1.series[1].data = r.dataChart1False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart1);
+
+                dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
+                dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart2', dataChart2);
+
+                jQuery("#loader").hide();
+                jQuery("#result").html(r.html);
+                jQuery("#result").show();
+            }
+          }, "json"
+      );
     }
 
     function periode_onchange() {
@@ -135,6 +143,10 @@
     }
   </script>
 
+
+</head>
+<body>
+    
     <!-- start sidebar menu -->
     <div class="sidebar-container">
         <?= $sidebar; ?>
@@ -142,16 +154,16 @@
     <!-- end sidebar menu -->
 
     <!-- start page content -->
-<div class="page-content-wrapper">
-    <div class="page-content">
-        <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
+    <div class="page-content-wrapper">
+         <div class="page-content">
+            <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
             <div class="row">
                 <div class="col-md-12 col-sm-12">
                     <div class="panel" id="panel_form">
                         <div class="card-header" style="text-align: center; font-size:large;">
                             <b>Dashboard Profile Control Room</b>
                         </div>
-                       <div class="panel-body" id="bar-parent10">
+                        <div class="panel-body" id="bar-parent10">
                             <div class="form-group row">
                                 <div class="col-lg-2 col-md-2">
                                     <!--<select id="contractor" name="contractor" class="form-control select2" >-->
@@ -180,14 +192,17 @@
                                         ?>
                                     </select>
                                 </div>
-                                <div class="col-lg-2 col-md-2">
-                                        <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
-                                        <option value="0">--All Violation</option>
-                                    <?php
-                                     for ($i = 0; $i < sizeof($violationmaster); $i++) {?>
-                                     <option value=<?php echo $violationmaster[$i]["alarmmaster_id"] ?>><?php echo $violationmaster[$i]["alarmmaster_name"] ?></option>
-                                        <?php } ?>
-                                    </select>
+                                <div class="col-lg-3 col-md-3">
+                                                <select id="violation" name="violation" class="form-control select2"  >
+                                                    <option value="all">All Violation</option>
+													<option value="Call">Call</option>
+													<option value="Car Distance">Car Distance</option>
+													<option value="Distracted">Distracted</option>
+													<option value="Fatigue">Fatigue</option>
+													<option value="Smoking">Smoking</option>
+													<option value="Driver Abnormal">Driver Abnormal</option>
+													<option value="overspeed" selected>Overspeed</option>
+												</select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
                                     <!-- <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
@@ -239,159 +254,132 @@
 
             </div>
          </form>
-         <div id="result"></div>
 
-
-
-        <div id="modalStatev" class="modal" style="height: 100%;">
-            <div class="modal-content-state">
-                <div class="row">
-                    <div class="col-md-10">
-                        <p class="modalTitleforAll" id="modalStateTitle">
-                            <button type="button" name="button" id="export_xcel_info" class="btn btn-primary btn-sm">Export Excel</button>
-                        </p>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn btn-danger btn-sm" onclick="closemodalviolation()">X</div>
-                    </div>
-                </div>
-                <div id="modalStateContent">
-                    <table class="table table-striped table-bordered" id="contenttable" style="font-size: 12px; text-align:center;">
-
-                    </table>
-                </div>
-                <div id="divtoUpload" style="display:none"></div>
-            </div>
-        </div>
-
-    <!-- Container untuk grafik pertama -->
     <div id="chart1" style="width: 50%; float: left;"></div>
-    <!-- Container untuk grafik kedua -->
     <div id="chart2" style="width: 50%; float: left;"></div>
 
+
     <script>
+        $(document).ready(function() {
+            // Panggil getDataAndRenderCharts saat halaman dimuat
+            getDataAndRenderCharts();
+
+            // Tambahkan event handler untuk tombol "Search"
+            $("#btnSearch").click(function() {
+                 page();
+             });
+         });
+
+    </script>
+
+    <script>
+             function getDataAndRenderCharts() {
+          $.ajax({
+             url: '', //url get data
+            method: 'GET', // Atur metode HTTP yang sesuai
+            success: function(data) {
+                var dataChart1True = data.dataChart1True;
+                var dataChart1False = data.dataChart1False;
+                var dataChart2True = data.dataChart2True;
+                var dataChart2False = data.dataChart2False;
+
+                dataChart1.series[0].data = dataChart1True;
+                dataChart1.series[1].data = dataChart1False;
+                Highcharts.chart('chart1', dataChart1);
+
+                dataChart2.series[0].data = dataChart2True;
+                dataChart2.series[1].data = dataChart2False;
+                Highcharts.chart('chart2', dataChart2);
+            },
+            error: function(error) {
+                console.error('Error:', error);
+                alert('Error fetching data from server');
+            }
+        });
+    }
+    </script>
+
+    <script>
+        var parsedData = []; // You can populate this array with your parsed data objects
+        // Example of populating parsedData:
+        parsedData.push({ x: 'Jan', y: 1 });
+        parsedData.push({ x: 'Feb', y: 3 });
+        parsedData.push({ x: 'Mar', y: 2 });
+        parsedData.push({ x: 'Apr', y: 4 });
+        parsedData.push({ x: 'Mei', y: 5 });
         // Data untuk grafik pertama
-        var data1 = {
-            chart: {
-               type: 'spline'
+        var dataChart1 = {
+        chart: {
+        type: 'spline'
              },
-            title: {
-                text: 'DASHBOARD TRUE FALSE ALARM'
-            },
-            subtitle: {
-                text: 'Periode<br>'
-            },
+         title: {
+            text: 'DASHBOARD TRUE-FALSE ALARM'
+         },
             xAxis: {
-                type: 'datetime',
-                dateTimeLabelFormats: {
-		            day: '%e of %b'
-		        }
+                categories: parsedData.map(item => item.x),
+        },
+        subtitle: {
+                text: 'Periode<br>' 
+        },
+         yAxis: {
+            title: {
+            text: 'Percentage (%)',
+         }
+        },
             series: [{
-               name: 'True',
-               type: 'spline',
-               color: 'green',
-               data: [5, 10, 15, 20, 25]
-                 }, {
-               name: 'False',
-               type: 'spline',
-               color: 'black',
-               data: [5, 10, 15, 20, 25]
-             }]
-         }   
-        };
+            name: 'True',
+            type: 'spline',
+            color: 'green',
+            data: parsedData.map(item => item.y), // Extract y values from parsedData
+            }, {
+            name: 'False',
+            type: 'spline',
+            color: 'black',
+            data: [5, 4, 3, 2, 1]
+            }]
+    };
+
 
         // Data untuk grafik kedua
-        var data2 = {
+        var dataChart2 = {
+            chart: {
+                type: 'spline'
+            },
             title: {
                 text: 'DASHBOARD LEAD TIME INTERVENSI'
             },
             subtitle: {
-                text: 'Periode<br>' + date
+                text: 'Periode<br>' 
             },
-            xAxis: {
-                categories: <?php echo json_encode($day);?>,
+            xAxis: { 
+                categories: parsedData.map(item => item.x), 
             },
-            series: [{
-               name: 'True',
-               type: 'spline',
-               color: 'green',
-               data: <?php echo json_encode($value);?>
-                 }, {
-               name: 'False',
-               color: 'black',
-               type: 'spline',
-               data: <?php echo json_encode($value);?>
-             }]
+             yAxis: {
+               title: {
+                text: 'Percentage (%)',
+                }
+             },
+                series: [{
+                name: 'True',
+                type: 'spline',
+                color: 'green',
+                data:  parsedData.map(item => item.y), // Extract y values from parsedData
+                    }, {
+                name: 'False',
+                type: 'spline',
+                color: 'black',
+                data: [5, 4, 3, 2, 1]
+            }]
         };
 
-        // Membuat grafik pertama
-        Highcharts.chart('chart1', data1);
+        // Membuat grafik pertama di div dengan id "chart1"
+        Highcharts.chart('chart1', dataChart1);
 
-        // Membuat grafik kedua
-        Highcharts.chart('chart2', data2);
-     </script>
-     <script type="text/javascript">
-        function showinfo(sdate = null, edate = null, company = null, company_name = null, violation = null) {
-        // return false;
-        $("#contenttable").html("");
-        var data = {
-            start_date: sdate,
-            end_date: edate,
-            company: company,
-            company_name: company_name,
-            violation: violation
+        // Membuat grafik kedua di div dengan id "chart2"
+        Highcharts.chart('chart2', dataChart2);
+        
+        // Menampilkan data di konsol
+        for (var i = 0; i < leadtimeSeriesData.length; i++) {
+            console.log('Hari ke-' + (i + 1) + ': ' + leadtimeSeriesData[i].y);
         }
-        jQuery("#loader2").show();
-        jQuery.post("<?= base_url(); ?>hse/infodetail2", data,
-            function(r) {
-                if (r.error) {
-                    jQuery("#loader2").hide();
-                    alert("Data empty!");
-                    return;
-                } else {
-                    $("#contenttable").html(r.html);
-                    jQuery("#loader2").hide();
-                    $("#modalStatev").show();
-                }
-            }, "json"
-        );
-    }
-
-    function closemodalviolation() {
-        $("#modalStatev").hide();
-    }
-
-    $(document).ready(function() {
-        //edit datepicker
-        $(".glyphicon-arrow-right").html(">>");
-        $(".glyphicon-arrow-left").html("<<");
-
-        // buildTable($table);
-        // $("#modalStatev").show();
-        page(0);
-
-        //export excel
-        jQuery("#export_xcel_info").click(function() {
-            var title = $("#contenttable .titletable").html();
-            var isi = $('#modalStateContent').html();
-            $("#divtoUpload").html(isi);
-            $("#divtoUpload .attachment").html("link");
-            // $("#divtoUpload .attachment2").html("link video");
-            var myBlob = new Blob([$("#divtoUpload").html()], {
-                type: 'application/vnd.ms-excel'
-            });
-            var url = window.URL.createObjectURL(myBlob);
-            var a = document.createElement("a");
-            document.body.appendChild(a);
-            a.href = url;
-            a.download = title + ".xls";
-            a.click();
-            setTimeout(function() {
-                window.URL.revokeObjectURL(url);
-            }, 0);
-
-        });
-
-     });
-  </script>
-</script>
+    </script>

@@ -587,7 +587,7 @@ class Dashboardberau extends Base
       // echo "<pre>";
 
   		$this->params['content']   = $datafix;
-      $this->params['alarmtype'] = $alarmtype;
+      	$this->params['alarmtype'] = $alarmtype;
   		$html                      = $this->load->view('newdashboard/dashboardberau/postevent/v_dashboard_postevent_result', $this->params, true);
   		$callback["html"]          = $html;
   		$callback["report"]        = $datafix;

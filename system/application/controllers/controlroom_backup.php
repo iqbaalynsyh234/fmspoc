@@ -18,9 +18,16 @@ class controlroom extends Base
 
     function index()
     {
-        $data['chart_data'] = $this->ChartModel->getChartData();
         $this->room();
     }
+
+    public function apiData($bulan){
+		$corona = new ControlroomModel();
+		$corona->where('tgl >=',"2020-{$bulan}-01");
+		$corona->where('tgl <=',"2020-{$bulan}-31");
+		$corona->orderBy('tgl','asc');
+		echo json_encode($corona->get()->getResult());
+	}
 
     function room()
     {
@@ -438,62 +445,6 @@ class controlroom extends Base
             echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
         }
     }
-
-    
-	//source overspeed dari table alert
-	function violation2()
-	{
-
-		ini_set('display_errors', 1);
-
-		$this->params['code_view_menu'] = "report";
-
-		$companydata = $this->get_company();
-		$vehicledata = $this->get_vehicle();
-		$rviolation = $this->getViolation();
-
-		$this->params["rcompany"]    = $companydata;
-		$this->params["rvehicle"]    = $vehicledata;
-		$this->params["rviolation"]  = $rviolation;
-		$this->params['code_view_menu'] = "dashboard";
-
-		///new
-
-		$privilegecode = $this->sess->user_id_role;
-
-		$this->params["header"]         = $this->load->view('newdashboard/partial/headernew', $this->params, true);
-		$this->params["chatsidebar"]    = $this->load->view('newdashboard/partial/chatsidebar', $this->params, true);
-		$this->params["onload"]         = 1;
-		if ($privilegecode == 1) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_superuser', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/hse/v_daily_violation2', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_superuser", $this->params);
-		} elseif ($privilegecode == 2) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_managementuser', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/hse/v_daily_violation2', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_managementuser", $this->params);
-		} elseif ($privilegecode == 3) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_reguleruser', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/hse/v_daily_violation2', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_reguleruser", $this->params);
-		} elseif ($privilegecode == 4) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_teknikaluser', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/hse/v_daily_violation2', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_teknikaluser", $this->params);
-		} elseif ($privilegecode == 5) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_adminpjo', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/hse/v_daily_violation2', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_adminpjo", $this->params);
-		} elseif ($privilegecode == 6) {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar_userpjo', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_userpjo", $this->params);
-		} else {
-			$this->params["sidebar"]        = $this->load->view('newdashboard/partial/sidebar', $this->params, true);
-			$this->params["content"]        = $this->load->view('newdashboard/controlroom/v_controlroom', $this->params, true);
-			$this->load->view("newdashboard/partial/template_dashboard_new", $this->params);
-		}
-	}
 
     function search_violation2()
 	{
