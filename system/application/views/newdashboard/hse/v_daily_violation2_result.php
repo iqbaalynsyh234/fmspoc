@@ -270,7 +270,7 @@
                 text: 'This Title'
             },
             subtitle: {
-                text: 'Dashboard Trend Alert<br>' + date
+                text: 'Dashboard Trend Alert33345<br>' + date
             },
             accessibility: {
                 announceNewData: {
@@ -316,7 +316,7 @@
                                     $(".highcharts-xaxis text").html("Hour");
 
                                     this.series.chart.setTitle({
-                                        text: "Total Violation : " + total_data
+                                        text: "Total Violationnnn : " + total_data
                                     }, {
                                         text: "Dashboard Trend Alert<br>" + date
                                     });
