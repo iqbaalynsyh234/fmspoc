@@ -306,8 +306,8 @@
 
 
       var plotlin = -1;
-	    var maks = 10;
-      /*  var maks = null;
+	  var maks = 10;
+     /*  var maks = null;
       if (location == 0) {
         plotlin = 0.8 * total_unit;
         plotlin = Math.round(plotlin);

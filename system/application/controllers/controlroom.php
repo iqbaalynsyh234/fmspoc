@@ -88,37 +88,37 @@ class controlroom extends Base
             echo json_encode(array("code" => 200, "error" => true, "msg" => "Date Not Found", "total" => 0, "data" => array()));
             exit();
         }
-            $lastdate = date("Y-m-t", strtotime($datein));
-            $year = date("Y", strtotime($datein));
-            $month = date("m", strtotime($datein));
-            $day = date('d', strtotime($datein));
-            $day++;
-            $jmlday = strlen($day);
-            if ($jmlday == 1) {
-                $day = "0" . $day;
-            }
-            $next = $year . "-" . $month . "-" . $day;
+        $lastdate = date("Y-m-t", strtotime($datein));
+        $year = date("Y", strtotime($datein));
+        $month = date("m", strtotime($datein));
+        $day = date('d', strtotime($datein));
+        $day++;
+        $jmlday = strlen($day);
+        if ($jmlday == 1) {
+            $day = "0" . $day;
+        }
+        $next = $year . "-" . $month . "-" . $day;
 
-                if ($next > $lastdate) {
-                    if ($month == 12) {
-                        $y = $year + 1;
-                        $next = $y . "-01-01";
-                    } else {
-                        $m = $month + 1;
-                        $jmlmonth = strlen($m);
-                        if ($jmlmonth == 1) {
-                            $m = "0" . $m;
-                        }
-                        $next = $year . "-" . $m . "-01";
-                    }
+        if ($next > $lastdate) {
+            if ($month == 12) {
+                $y = $year + 1;
+                $next = $y . "-01-01";
+            } else {
+                $m = $month + 1;
+                $jmlmonth = strlen($m);
+                if ($jmlmonth == 1) {
+                    $m = "0" . $m;
+                }
+                $next = $year . "-" . $m . "-01";
             }
+        }
         $arraydate = array("date" => $date, "next date" => $next, "last date" => $lastdate);
 
-        // $shift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17");
-        // $shift21 = array("18", "19", "20", "21", "22", "23");
-        // $shift22 = array("00", "01", "02", "03", "04", "05");
-        // $allshift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
-        // $allshift2 = array("00", "01", "02", "03", "04", "05");
+        $shift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17");
+        $shift21 = array("18", "19", "20", "21", "22", "23");
+        $shift22 = array("00", "01", "02", "03", "04", "05");
+        $allshift1 = array("06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
+        $allshift2 = array("00", "01", "02", "03", "04", "05");
 
 		$days_report = date("d", strtotime($datein));
 		$month_report = date("F", strtotime($datein));
@@ -194,14 +194,14 @@ class controlroom extends Base
 		}
 
         //get alarm true false up
-        $this->db->select("alarm_report_id,alarm_report_start_time,company_name");
+        $this->db->select("vehicle_name,vehicle_no,company_name");
         $this->db->order_by("company_name", "asc");
-        $this->db->where("alarm_report_statusinterventation_cr <>", 3);
+        $this->db->where("vehicle_status <>", 3);
 
         if ($company != 0) {
-            $this->db->where("alarm_report_statusinterventation_cr", $company);
+            $this->db->where("vehicle_company", $company);
         }
-		$this->db->where("alarm_report_id", 4408);
+		$this->db->where("vehicle_user_id", 4408);
         $this->db->join("company", "vehicle_company = company_id", "left");
         $qd = $this->db->get("vehicle");
         $total_unit = $qd->num_rows();
@@ -220,7 +220,6 @@ class controlroom extends Base
             }
         }
         //end get vehicle info
-        
         //location selected
         //$this->dbts = $this->load->database("webtracking_ts", true);
 		$this->dbts = $this->load->database("tensor_report", true);
@@ -430,11 +429,16 @@ class controlroom extends Base
                 "error" => false,
                 "msg" => "success",
                 "data" => $data, //data mentah dari source data untuk compare data fix
+                "total_unit_location" => count($unit_location), //total unit dilokasi terpilih
+                "total_unit" => $total_unit, //total unit semua kontraktor atau perkontraktor dipilih
+                "total_unit_per_contractor" => $total_unit_percontractor, //total unit tiap kontraktor
                 "data_hour" => $dhour, //data jam
                 "data_company" => $dcompany, //data kontraktor
                 "data_location" => $dlocation, //data lokasi
                 "data_fix" => $data_fix, //data fix
                 "length_company" => count($dcompany), //jumlah kontraktor
+                "length_location" => count($dlocation), //jumlah lokasi
+                "length_hour" => count($dhour) //jumlah jam
             ));
         } else {
             echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
@@ -1328,9 +1332,9 @@ class controlroom extends Base
         // $allshift2 = array("00", "01", "02", "03", "04", "05");
 
         //get vehicle info
-        $this->db->select("alarm_report_start_time, COUNT(*) as alarm_report_statusintervention_cr");
+        $this->db->select("alarm_report_name, COUNT(*) as alarm_status_intervention");
         $this->db->group_by("alarm_report_name");
-        $this->db->where("alarm_report_statusintervention_cr <>", 3);
+        $this->db->where("alarm_status_intervention <>", 3);
 
         if ($company != 0) {
             $this->db->where("alarm_report_name", $company);
@@ -1338,17 +1342,17 @@ class controlroom extends Base
 		$this->db->where("alarm_report_id", 4408);
         $this->db->join("alarm_report_name", "alarm_status_i = company_id", "left");
         $qd = $this->db->get("vehicle");
-        $alarm_report_start_time = $qd->num_rows();
+        $total_unit = $qd->num_rows();
         $rd = $qd->result();
-        $alarm_report_statusintervention_cr = array();
+        $total_unit_percontractor = array();
         if ($company == 0) {
-            for ($x = 0; $x < $alarm_report_name; $x++) {
+            for ($x = 0; $x < $total_unit; $x++) {
                 if ($rd[$x]->company_name != null) {
-                    if (!isset($alarm_report_statusintervention_cr[$rd[$x]->alarm_report_name])) {
-                        $alarm_report_statusintervention_cr[$rd[$x]->company_name] = 1;
+                    if (!isset($total_unit_percontractor[$rd[$x]->company_name])) {
+                        $total_unit_percontractor[$rd[$x]->company_name] = 1;
                     } else {
-                        $jml = (int)$alarm_report_statusintervention_cr[$rd[$x]->alarm_report_name] + 1;
-                        $alarm_report_statusintervention_cr[$rd[$x]->alarm_report_name] = $jml;
+                        $jml = (int)$total_unit_percontractor[$rd[$x]->company_name] + 1;
+                        $total_unit_percontractor[$rd[$x]->company_name] = $jml;
                     }
                 }
             }
