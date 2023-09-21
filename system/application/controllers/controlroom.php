@@ -18,7 +18,6 @@ class controlroom extends Base
 
     function index()
     {
-        $data['chart_data'] = $this->ChartModel->getChartData();
         $this->room();
     }
 

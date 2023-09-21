@@ -253,7 +253,6 @@
          </form>
 
 
-
     <script>
 
     $("#btnsearchreport").click(function (e) {
@@ -269,7 +268,6 @@
     
    </script>
 
-   
     <script>
         // menruskan data kedalam bentuk json
         var chartData = <?php echo json_encode($chart_data); ?>;

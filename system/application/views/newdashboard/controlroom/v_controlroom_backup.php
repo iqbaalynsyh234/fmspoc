@@ -1,7 +1,7 @@
-<script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <!-- Include Chart.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
     <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
@@ -159,7 +159,7 @@
             <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
             <div class="row">
                 <div class="col-md-12 col-sm-12">
-                    <div class="panel" id="panel_form">
+                    <div class="panel"id="myChart">
                         <div class="card-header" style="text-align: center; font-size:large;">
                             <b>Dashboard Profile Control Room</b>
                         </div>
@@ -192,17 +192,14 @@
                                         ?>
                                     </select>
                                 </div>
-                                <div class="col-lg-3 col-md-3">
-                                                <select id="violation" name="violation" class="form-control select2"  >
-                                                    <option value="all">All Violation</option>
-													<option value="Call">Call</option>
-													<option value="Car Distance">Car Distance</option>
-													<option value="Distracted">Distracted</option>
-													<option value="Fatigue">Fatigue</option>
-													<option value="Smoking">Smoking</option>
-													<option value="Driver Abnormal">Driver Abnormal</option>
-													<option value="overspeed" selected>Overspeed</option>
-												</select>
+                                <div class="col-lg-2 col-md-2">
+                                    <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
+                                        <option value="0">--All Violation</option>
+                                        <?php
+                                        for ($i = 0; $i < sizeof($violationmaster); $i++) {?>
+                                        <option value=<?php echo $violationmaster[$i]["alarmmaster_id"] ?>><?php echo $violationmaster[$i]["alarmmaster_name"] ?></option>
+                                        <?php } ?>
+                                    </select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
                                     <!-- <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
@@ -219,7 +216,7 @@
                                     </select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
-                                    <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit">Search</button>
+                                    <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit" style="margin-left: 30px;">Search</button>
                                     <!-- <img id="loader2" style="display:none;" src="<?php echo base_url(); ?>assets/images/ajax-loader.gif" /> -->
                                 </div>
                             </div>
@@ -255,131 +252,71 @@
             </div>
          </form>
 
-    <div id="chart1" style="width: 50%; float: left;"></div>
-    <div id="chart2" style="width: 50%; float: left;"></div>
 
 
     <script>
-        $(document).ready(function() {
-            // Panggil getDataAndRenderCharts saat halaman dimuat
-            getDataAndRenderCharts();
 
-            // Tambahkan event handler untuk tombol "Search"
-            $("#btnSearch").click(function() {
-                 page();
-             });
-         });
+    $("#btnsearchreport").click(function (e) {
+        e.preventDefault();
+        const company = $("#company").val();
+        const violation = $("#violation").val();
+        const periode = $("#periode").val();
+        const startDate = $("#startdate").val();
+        const endDate = $("#endtdate").val();
 
-    </script>
+        drawCharts(company, violation, periode, startDate, endDate);
+    });
+    
+   </script>
 
     <script>
-             function getDataAndRenderCharts() {
-          $.ajax({
-             url: '', //url get data
-            method: 'GET', // Atur metode HTTP yang sesuai
-            success: function(data) {
-                var dataChart1True = data.dataChart1True;
-                var dataChart1False = data.dataChart1False;
-                var dataChart2True = data.dataChart2True;
-                var dataChart2False = data.dataChart2False;
+        // menruskan data kedalam bentuk json
+        var chartData = <?php echo json_encode($chart_data); ?>;
 
-                dataChart1.series[0].data = dataChart1True;
-                dataChart1.series[1].data = dataChart1False;
-                Highcharts.chart('chart1', dataChart1);
+        // membuat point
+        var labels = chartData.map(item => item.alarm_report_start_time);
+        var dataPoints = chartData.map(item => item.alarm_report_statusinterventation_up);
 
-                dataChart2.series[0].data = dataChart2True;
-                dataChart2.series[1].data = dataChart2False;
-                Highcharts.chart('chart2', dataChart2);
+        // Get the canvas element
+        var ctx = document.getElementById('myChart').getContext('2d');
+
+        // Buat line chart
+        var lineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Alarm Report True/False Count',
+                    data: dataPoints,
+                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 1
+                }]
             },
-            error: function(error) {
-                console.error('Error:', error);
-                alert('Error fetching data from server');
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Count'
+                        }
+                    }]
+                }
             }
         });
-    }
-    </script>
-
-    <script>
-        var parsedData = []; // You can populate this array with your parsed data objects
-        // Example of populating parsedData:
-        parsedData.push({ x: 'Jan', y: 1 });
-        parsedData.push({ x: 'Feb', y: 3 });
-        parsedData.push({ x: 'Mar', y: 2 });
-        parsedData.push({ x: 'Apr', y: 4 });
-        parsedData.push({ x: 'Mei', y: 5 });
-        // Data untuk grafik pertama
-        var dataChart1 = {
-        chart: {
-        type: 'spline'
-             },
-         title: {
-            text: 'DASHBOARD TRUE-FALSE ALARM'
-         },
-            xAxis: {
-                categories: parsedData.map(item => item.x),
-        },
-        subtitle: {
-                text: 'Periode<br>' 
-        },
-         yAxis: {
-            title: {
-            text: 'Percentage (%)',
-         }
-        },
-            series: [{
-            name: 'True',
-            type: 'spline',
-            color: 'green',
-            data: parsedData.map(item => item.y), // Extract y values from parsedData
-            }, {
-            name: 'False',
-            type: 'spline',
-            color: 'black',
-            data: [5, 4, 3, 2, 1]
-            }]
-    };
-
-
-        // Data untuk grafik kedua
-        var dataChart2 = {
-            chart: {
-                type: 'spline'
-            },
-            title: {
-                text: 'DASHBOARD LEAD TIME INTERVENSI'
-            },
-            subtitle: {
-                text: 'Periode<br>' 
-            },
-            xAxis: { 
-                categories: parsedData.map(item => item.x), 
-            },
-             yAxis: {
-               title: {
-                text: 'Percentage (%)',
-                }
-             },
-                series: [{
-                name: 'True',
-                type: 'spline',
-                color: 'green',
-                data:  parsedData.map(item => item.y), // Extract y values from parsedData
-                    }, {
-                name: 'False',
-                type: 'spline',
-                color: 'black',
-                data: [5, 4, 3, 2, 1]
-            }]
-        };
-
-        // Membuat grafik pertama di div dengan id "chart1"
-        Highcharts.chart('chart1', dataChart1);
-
-        // Membuat grafik kedua di div dengan id "chart2"
-        Highcharts.chart('chart2', dataChart2);
-        
-        // Menampilkan data di konsol
-        for (var i = 0; i < leadtimeSeriesData.length; i++) {
-            console.log('Hari ke-' + (i + 1) + ': ' + leadtimeSeriesData[i].y);
-        }
     </script>
