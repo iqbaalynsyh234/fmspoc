@@ -12,8 +12,22 @@
 
 <script>
     function frmsearch_onsubmit() {
-        var company = $("#company").val()
+        var company = $("#company").val();
+        // var vehicle = $("#vehicle").val();
+        // var violation = $("#violation").val();
         var periode = $("#periode").val();
+        // if (company != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
+        // }
+        // if (vehicle != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
+        // }
+        // if (violation != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
+        // }
         if (periode == "this_month") {
             if (company == "all") {
                 alert("1 month data only for specific contractors!");
@@ -25,39 +39,39 @@
     }
 
     function page() {
+        // if (p == undefined) {
+        //     p = 0;
+        // }
+        // jQuery("#offset").val(p);
         jQuery("#result").hide();
         jQuery("#loader").show();
 
         jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
-            function (r) {
-                if (r.error) {
-                    console.log(r);
-                    alert(r.message);
-                    jQuery("#loader").hide();
-                    jQuery("#result").hide();
-                    return;
-                } else {
-                    console.log(r);
+        function (r) {
+            if (r.error) {
+                console.log(r);
+                alert(r.message);
+                jQuery("#loader").hide();
+                jQuery("#result").hide();
+                return;
+            } else {
+                console.log(r);
 
-                    // Update data kategori (xAxis categories) dari hasil pencarian
-                    dataChart1.xAxis.categories = r.xAxisCategories;
-                    dataChart2.xAxis.categories = r.xAxisCategories;
+                // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
+                dataChart1.series[0].data = r.dataChart1True; // Ganti dengan data True dari hasil pencarian
+                dataChart1.series[1].data = r.dataChart1False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart1);
 
-                    // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
-                    dataChart1.series[0].data = r.dataChart1True;
-                    dataChart1.series[1].data = r.dataChart1False;
-                    Highcharts.chart('chart1', dataChart1);
+                dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
+                dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart2);
 
-                    dataChart2.series[0].data = r.dataChart2True;
-                    dataChart2.series[1].data = r.dataChart2False;
-                    Highcharts.chart('chart2', dataChart2);
-
-                    jQuery("#loader").hide();
-                    jQuery("#result").html(r.html);
-                    jQuery("#result").show();
-                }
-            }, "json"
-        );
+                jQuery("#loader").hide();
+                jQuery("#result").html(r.html);
+                jQuery("#result").show();
+            }
+          }, "json"
+      );
     }
 
     function periode_onchange() {
@@ -73,7 +87,7 @@
 
     }
 
-    function company_onchange() {
+      function company_onchange() {
         var data_company = jQuery("#company").val();
         var dc = data_company.split("@");
         var site = "<?= base_url() ?>hse/get_vehicle_by_company/" + dc[0];
@@ -86,7 +100,6 @@
             dataType: "html"
         });
     }
-
   </script>
 
 </script>
@@ -199,36 +212,36 @@
             </div>
     </form>
 
-    <div id="result"></div>
     <div id="chart1" style="width: 50%; float: left;"></div>
     <div id="chart2" style="width: 50%; float: left;"></div>
 
     <script>
-            $("#btnsearchreport").click(function (e) {
-                e.preventDefault();
-                const company = $("#company").val();
-                const violation = $("#violation").val();
-                const periode = $("#periode").val();
-                const startDate = $("#startdate").val();
-                const endDate = $("#enddate").val();
 
-                drawCharts(company, violation, periode, startDate, endDate);
-             });
+        
+    $("#btnsearchreport").click(function (e) {
+        e.preventDefault();
+        const company = $("#company").val();
+        const violation = $("#violation").val();
+        const periode = $("#periode").val();
+        const startDate = $("#startdate").val();
+        const endDate = $("#enddate").val();
+
+        drawCharts(company, violation, periode, startDate, endDate);
+    });
 
     </script>
 
-<script>
-        // Data untuk grafik 
-        var dynamicXAxisCategories = <?php echo json_encode($xAxisCategories); ?>;
+    <script>
+        // Data untuk grafik pertama
         var data1 = {
             title: {
                     text: 'DASHBOARD TRUE-FALSE ALARM'
                 },
             subtitle: {
-                    text: 'Periode' + date
+                    text: 'Periode' 
             },
             xAxis: {
-                categories: dynamicData.xAxisCategories
+                categories: ['Data A', 'Data B', 'Data C', 'Data D', 'Data E']
             },
             series: [{
                 name: 'True',

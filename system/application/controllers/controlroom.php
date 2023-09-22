@@ -20,6 +20,13 @@ class controlroom extends Base
     {
         $this->room();
     }
+    
+    public function getChartData() {
+        $query = $this->db->select('alarm_report_start_time, alarm_report_statusinterventation_up')
+        ->from('alarm_evidence_agustus_2023')
+        ->get();
+    	return $query->result_array();
+    }
 
 
     function room()
@@ -76,43 +83,360 @@ class controlroom extends Base
         $company = $this->input->post('company');
         $violation = $this->input->post('violation');
         $datein = $this->input->post('date');
-        $startDate = $this->input->post('start_date');
-        $endDate = $this->input->post('end_date');
+        $date = date("Y-m-d", strtotime($datein));
+        if (date("Y-m-d") < $date) {
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Date Not Found", "total" => 0, "data" => array()));
+            exit();
+        }
+        $lastdate = date("Y-m-t", strtotime($datein));
+        $year = date("Y", strtotime($datein));
+        $month = date("m", strtotime($datein));
+        $day = date('d', strtotime($datein));
+        $day++;
+        $jmlday = strlen($day);
+        if ($jmlday == 1) {
+            $day = "0" . $day;
+        }
+        $next = $year . "-" . $month . "-" . $day;
 
-        // Konversi tanggal ke format yang sesuai
-         $date = date("Y-m-d", strtotime($datein));
-         $startDateTime = date("Y-m-d H:i:s", strtotime($startDate));
-         $endDateTime = date("Y-m-d H:i:s", strtotime($endDate));
+        if ($next > $lastdate) {
+            if ($month == 12) {
+                $y = $year + 1;
+                $next = $y . "-01-01";
+            } else {
+                $m = $month + 1;
+                $jmlmonth = strlen($m);
+                if ($jmlmonth == 1) {
+                    $m = "0" . $m;
+                }
+                $next = $year . "-" . $m . "-01";
+            }
+        }
+        $arraydate = array("date" => $date, "next date" => $next, "last date" => $lastdate);
 
-         // Tambahkan filter perusahaan jika diberikan
-        $where = '';
-         if ($company != 0) {
-         $where .= " AND vehicle_company = $company";
-         }
+		$days_report = date("d", strtotime($datein));
+		$month_report = date("F", strtotime($datein));
+		$year_report = date("Y", strtotime($datein));
+		$before_status = 0;
+		$year_before = date('Y',strtotime('-1 year',strtotime($year_report)));
 
-        // Tambahkan filter pelanggaran jika diberikan
-        if (!empty($violation)) {
-            $where .= " AND violation_column_name = '$violation'";
+		$report = "alarm_evidence_";
+		$report_ritase = "alarm_evidence_";
+
+		switch ($month_report)
+		{
+			case "January":
+            $dbtable = $report."januari_".$year_report;
+			$dbtable_ritase = $report_ritase."januari_".$year_report;
+			$dbtable_before = $report."desember_".$year_before;
+			break;
+			case "February":
+            $dbtable = $report."februari_".$year_report;
+			$dbtable_ritase = $report_ritase."februari_".$year_report;
+			$dbtable_before = $report."januari_".$year_report;
+			break;
+			case "March":
+            $dbtable = $report."maret_".$year_report;
+			$dbtable_ritase = $report_ritase."maret_".$year_report;
+			$dbtable_before = $report."februari_".$year_report;
+			break;
+			case "April":
+            $dbtable = $report."april_".$year_report;
+			$dbtable_ritase = $report_ritase."april_".$year_report;
+			$dbtable_before = $report."maret_".$year_report;
+			break;
+			case "May":
+            $dbtable = $report."mei_".$year_report;
+			$dbtable_ritase = $report_ritase."mei_".$year_report;
+			$dbtable_before = $report."april_".$year_report;
+			break;
+			case "June":
+            $dbtable = $report."juni_".$year_report;
+			$dbtable_ritase = $report_ritase."juni_".$year_report;
+			$dbtable_before = $report."mei_".$year_report;
+			break;
+			case "July":
+            $dbtable = $report."juli_".$year_report;
+			$dbtable_ritase = $report_ritase."juli_".$year_report;
+			$dbtable_before = $report."juni_".$year_report;
+			break;
+			case "August":
+            $dbtable = $report."agustus_".$year_report;
+			$dbtable_ritase = $report_ritase."agustus_".$year_report;
+			$dbtable_before = $report."juli_".$year_report;
+			break;
+			case "September":
+            $dbtable = $report."september_".$year_report;
+			$dbtable_ritase = $report_ritase."september_".$year_report;
+			$dbtable_before = $report."agustus_".$year_report;
+			break;
+			case "October":
+            $dbtable = $report."oktober_".$year_report;
+			$dbtable_ritase = $report_ritase."oktober_".$year_report;
+			$dbtable_before = $report."september_".$year_report;
+			break;
+			case "November":
+            $dbtable = $report."november_".$year_report;
+			$dbtable_ritase = $report_ritase."november_".$year_report;
+			$dbtable_before = $report."oktober_".$year_report;
+			break;
+			case "December":
+            $dbtable = $report."desember_".$year_report;
+			$dbtable_ritase = $report_ritase."desember_".$year_report;
+			$dbtable_before = $report."november_".$year_report;
+			break;
+		}
+
+        //get alarm true false up
+        $this->db->select("vehicle_name,vehicle_no,company_name");
+        $this->db->order_by("company_name", "asc");
+        $this->db->where("vehicle_status <>", 3);
+
+        if ($company != 0) {
+            $this->db->where("vehicle_company", $company);
+        }
+		$this->db->where("vehicle_user_id", 4408);
+        $this->db->join("company", "vehicle_company = company_id", "left");
+        $qd = $this->db->get("vehicle");
+        $total_unit = $qd->num_rows();
+        $rd = $qd->result();
+        $total_unit_percontractor = array();
+        if ($company == 0) {
+            for ($x = 0; $x < $total_unit; $x++) {
+                if ($rd[$x]->company_name != null) {
+                    if (!isset($total_unit_percontractor[$rd[$x]->company_name])) {
+                        $total_unit_percontractor[$rd[$x]->company_name] = 1;
+                    } else {
+                        $jml = (int)$total_unit_percontractor[$rd[$x]->company_name] + 1;
+                        $total_unit_percontractor[$rd[$x]->company_name] = $jml;
+                    }
+                }
+            }
+        }
+        //end get vehicle info
+        //location selected
+        //$this->dbts = $this->load->database("webtracking_ts", true);
+		$this->dbts = $this->load->database("tensor_report", true);
+
+        $this->db->order_by("location_report_location", "asc");
+		
+		//geofence baru di submit (18 juli 2023)
+        if ($location == "STREET.0") {
+            $this->dbts->where("location_report_group", "STREET");
+            $this->dbts->where("location_report_jalur", "kosongan");
+        } else if ($location == "STREET.1") {
+            $this->dbts->where("location_report_group", "STREET");
+            $this->dbts->where("location_report_jalur", "muatan");
+        } else if ($location == "0") {
+            $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
+        } else {
+            $exp = explode(" ", $location);
+            if ($exp[0] == "ROM") {
+                //lokasi ROM
+                $this->dbts->where("location_report_location", $location);
+            } else if ($exp[0] == "PORT") {
+                //lokasi PORT
+                $this->dbts->where("location_report_group", "PORT");
+                $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
+            }
         }
 
-          // Query SQL untuk mencari data berdasarkan parameter yang diberikan
-         $sql = "SELECT * FROM alarm_report_statusintervention_cr
-         WHERE alarm_start_time >= '$startDateTime' AND alarm_end_time <= '$endDateTime'
-         AND DATE(alarm_start_time) = '$date' $where";
-         $query = $this->db->query($sql);
-
-            if ($query->num_rows() > 0) {
-                $result = $query->result_array();
-                echo json_encode(array(
-                    "code" => 200,
-                    "error" => false,
-                    "msg" => "Success",
-                    "data" => $result,
-                    "total" => count($result)
-                ));
-            } else {
-                echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "total" => 0, "data" => array()));
+        if ($shift == 1) {
+            for ($s = 0; $s < count($shift1); $s++) {
+                $shift1[$s] .= ":00:00";
             }
+            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
+            $this->dbts->where("location_report_gps_date", $date);
+            if ($company != 0) {
+                $this->dbts->where("location_report_vehicle_company", $company);
+            }
+            $this->dbts->where_in("location_report_gps_hour", $shift1);
+            $this->dbts->order_by("location_report_gps_hour", "asc");
+            $this->dbts->order_by("location_report_company_name", "asc");
+            $result = $this->dbts->get($dbtable);
+            $data = $result->result_array();
+            $nr = $result->num_rows();
+        } else if ($shift == 2) {
+            for ($s = 0; $s < count($shift21); $s++) {
+                $shift21[$s] .= ":00:00";
+            }
+            for ($s = 0; $s < count($shift22); $s++) {
+                $shift22[$s] .= ":00:00";
+            }
+            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
+            $this->dbts->where("location_report_gps_date", $date);
+            if ($company != 0) {
+                $this->dbts->where("location_report_vehicle_company", $company);
+            }
+            $this->dbts->where_in("location_report_gps_hour", $shift21);
+            $this->dbts->order_by("location_report_gps_hour", "asc");
+            $this->dbts->order_by("location_report_company_name", "asc");
+            $result = $this->dbts->get($dbtable);
+            $data1 = $result->result_array();
+            $nr1 = $result->num_rows();
+            $this->dbts->distinct();
+            $this->db->order_by("location_report_location", "asc");
+            
+			//geofence baru di submit (18 juli 2023)
+			if ($location == "STREET.0") {
+                $this->dbts->where("location_report_group", "STREET");
+                $this->dbts->where("location_report_jalur", "kosongan");
+            } else if ($location == "STREET.1") {
+                $this->dbts->where("location_report_group", "STREET");
+                $this->dbts->where("location_report_jalur", "muatan");
+            } else if ($location == "0") {
+                $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
+            } else {
+                $exp = explode(" ", $location);
+                if ($exp[0] == "ROM") {
+                    //lokasi ROM
+                    $this->dbts->where("location_report_location", $location);
+                } else if ($exp[0] == "PORT") {
+                    //lokasi PORT
+                    $this->dbts->where("location_report_group", "PORT");
+                    $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
+                }
+            }
+			
+            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
+            $this->dbts->where("location_report_gps_date", $next);
+            if ($company != 0) {
+                $this->dbts->where("location_report_vehicle_company", $company);
+            }
+            $this->dbts->where_in("location_report_gps_hour", $shift22);
+            $this->dbts->order_by("location_report_gps_hour", "asc");
+            $this->dbts->order_by("location_report_company_name", "asc");
+            $result = $this->dbts->get($dbtable);
+            $data2 = $result->result_array();
+            $nr2 = $result->num_rows();
+            $data = array_merge($data1, $data2);
+            $nr = $nr1 +  $nr2;
+        } else {
+
+            for ($s = 0; $s < count($allshift1); $s++) {
+                $allshift1[$s] .= ":00:00";
+            }
+            for ($s = 0; $s < count($allshift2); $s++) {
+                $allshift2[$s] .= ":00:00";
+            }
+            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
+            $this->dbts->where("location_report_gps_date", $date);
+            if ($company != 0) {
+                $this->dbts->where("location_report_vehicle_company", $company);
+            }
+            $this->dbts->where_in("location_report_gps_hour", $allshift1);
+            $this->dbts->order_by("location_report_gps_hour", "asc");
+            $this->dbts->order_by("location_report_company_name", "asc");
+            $result = $this->dbts->get($dbtable);
+            $data1 = $result->result_array();
+            $nr1 = $result->num_rows();
+            $this->dbts->distinct();
+            $this->db->order_by("location_report_location", "asc");
+			
+			//geofence baru di submit (18 juli 2023)
+            if ($location == "STREET.0") {
+                $this->dbts->where("location_report_group", "STREET");
+                $this->dbts->where("location_report_jalur", "kosongan");
+            } else if ($location == "STREET.1") {
+                $this->dbts->where("location_report_group", "STREET");
+                $this->dbts->where("location_report_jalur", "muatan");
+            } else if ($location == "0") {
+                $this->dbts->where_in("location_report_group", array("STREET", "ROM", "PORT"));
+            } else {
+                $exp = explode(" ", $location);
+                if ($exp[0] == "ROM") {
+                    //lokasi ROM
+                    $this->dbts->where("location_report_location", $location);
+                } else if ($exp[0] == "PORT") {
+                    //lokasi PORT
+                    $this->dbts->where("location_report_group", "PORT");
+                    $this->dbts->where("location_report_location LIKE ", "%" . $exp[1] . "%");
+                }
+            }
+			
+            $this->dbts->select("location_report_vehicle_no,location_report_company_name,location_report_gps_date,location_report_gps_hour,location_report_location,location_report_group");
+            $this->dbts->where("location_report_gps_date", $next);
+            if ($company != 0) {
+                $this->dbts->where("location_report_vehicle_company", $company);
+            }
+            $this->dbts->where_in("location_report_gps_hour", $allshift2);
+            $this->dbts->order_by("location_report_gps_hour", "asc");
+            $this->dbts->order_by("location_report_company_name", "asc");
+            $result = $this->dbts->get($dbtable);
+            $data2 = $result->result_array();
+            $nr2 = $result->num_rows();
+            $data = array_merge($data1, $data2);
+            $nr = $nr1 +  $nr2;
+        }
+
+        if ($nr > 0) {
+            $data_fix = array();
+            $dhour = array();
+            $dcompany = array();
+            $dlocation = array();
+            $c = array();
+            $l = array();
+            for ($i = 0; $i < $nr; $i++) {
+                $exp = explode(":", $data[$i]['location_report_gps_hour']);
+
+                if (!isset($hour[$exp[0]])) {
+                    $hour[$exp[0]] = 1;
+                    $dhour[] = $exp[0];
+                }
+                if (!isset($c[$data[$i]['location_report_company_name']])) {
+
+                    $c[$data[$i]['location_report_company_name']] = $data[$i]['location_report_company_name'];
+                    $dcompany[] = $c[$data[$i]['location_report_company_name']];
+                }
+                if (!isset($l[$data[$i]['location_report_location']])) {
+
+                    $l[$data[$i]['location_report_location']] = $data[$i]['location_report_location'];
+                    $dlocation[] = $l[$data[$i]['location_report_location']];
+                }
+                // $data_fix[$exp[0]][$data[$i]['location_report_company_name']][$data[$i]['location_report_location']] = array("vehicle" => $data[$i]['location_report_vehicle_no']);
+                if (!isset($data_fix[$exp[0]][$data[$i]['location_report_company_name']])) {
+                    $data_fix[$exp[0]][$data[$i]['location_report_company_name']] = array();
+                    $d = array(
+                        "company" => $data[$i]['location_report_company_name'],
+                        "vehicle" => $data[$i]['location_report_vehicle_no'],
+                        "location" => $data[$i]['location_report_location'],
+                        "hour" => $exp[0]
+                    );
+                    array_push($data_fix[$exp[0]][$data[$i]['location_report_company_name']], $d);
+                } else {
+                    $d = array(
+                        "company" => $data[$i]['location_report_company_name'],
+                        "vehicle" => $data[$i]['location_report_vehicle_no'],
+                        "location" => $data[$i]['location_report_location'],
+                        "hour" => $exp[0]
+                    );
+                    array_push($data_fix[$exp[0]][$data[$i]['location_report_company_name']], $d);
+                }
+                if (!isset($unit_location[$data[$i]['location_report_vehicle_no']])) {
+                    $unit_location[$data[$i]['location_report_vehicle_no']] = $data[$i]['location_report_vehicle_no'];
+                }
+                $data[$i]['hour'] = $exp[0];
+            }
+
+            echo json_encode(array(
+                "code" => 200,
+                "error" => false,
+                "msg" => "success",
+                "data" => $data, //data mentah dari source data untuk compare data fix
+                "total_unit_location" => count($unit_location), //total unit dilokasi terpilih
+                "total_unit" => $total_unit, //total unit semua kontraktor atau perkontraktor dipilih
+                "total_unit_per_contractor" => $total_unit_percontractor, //total unit tiap kontraktor
+                "data_hour" => $dhour, //data jam
+                "data_company" => $dcompany, //data kontraktor
+                "data_location" => $dlocation, //data lokasi
+                "data_fix" => $data_fix, //data fix
+                "length_company" => count($dcompany), //jumlah kontraktor
+                "length_location" => count($dlocation), //jumlah lokasi
+                "length_hour" => count($dhour) //jumlah jam
+            ));
+        } else {
+            echo json_encode(array("code" => 200, "error" => true, "msg" => "Data Not Found", "data" => $data, "total" => $nr));
+        }
     }
 
     
@@ -175,13 +499,16 @@ class controlroom extends Base
 	{
 		ini_set('memory_limit', "5G");
 		ini_set('max_execution_time', 300); // 5 minutes
+		// $datein    = $this->input->post("date");
 		$company = $this->input->post("company");
 		$violation = $this->input->post("violation");
 		$vehicle = $this->input->post("vehicle");
+		// $date = date("Y-m-d", strtotime($datein));
+		// $month = date("F", strtotime($datein));
+		// $monthforparam = date("m", strtotime($datein));
+		// $year = date("Y", strtotime($datein));
 		$alarm_evidence_     = "alarm_evidence_";
 		$periode = $this->input->post("periode");
-        $sdate = $this->input->post("sdate");
-        $edate = $this->input->post("edate");
 		$year = date("Y");
 		$mont = date("m");
 		$nowday = date("d");

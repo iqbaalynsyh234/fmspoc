@@ -51,7 +51,7 @@ class Dashboardmodel extends Model {
 		$q = $this->db->get("vehicle");
 		$rows = $q->result();
 		return $rows;
-		}
+	}
 
 	function getvehicle_byowner(){
 		$user_level          = $this->sess->user_level;
