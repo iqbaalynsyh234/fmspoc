@@ -270,7 +270,7 @@
                 text: 'This Title'
             },
             subtitle: {
-                text: 'Dashboard Trend Alert33345<br>' + date
+                text: 'Dashboard Trend Alert<br>' + date
             },
             accessibility: {
                 announceNewData: {

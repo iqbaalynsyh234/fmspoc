@@ -1,4 +1,10 @@
+
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/data.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/drilldown.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/exporting.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/export-data.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/accessibility.js"></script>
 
 
 <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
@@ -41,7 +47,7 @@
         jQuery("#result").hide();
         jQuery("#loader").show();
 
-        jQuery.post("<?= base_url(); ?>hse/search_violation2", jQuery("#frmsearch").serialize(),
+        jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
         function (r) {
             if (r.error) {
                 console.log(r);
@@ -59,7 +65,7 @@
 
                 dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
                 dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
-                Highcharts.chart('chart2', dataChart2);
+                Highcharts.chart('chart1', dataChart2);
 
                 jQuery("#loader").hide();
                 jQuery("#result").html(r.html);
@@ -219,7 +225,7 @@
         const violation = $("#violation").val();
         const periode = $("#periode").val();
         const startDate = $("#startdate").val();
-        const endDate = $("#endtdate").val();
+        const endDate = $("#enddate").val();
 
         drawCharts(company, violation, periode, startDate, endDate);
     });
@@ -230,10 +236,10 @@
         // Data untuk grafik pertama
         var data1 = {
             title: {
-                text: 'DASHBOARD TRUE-FALSE ALARM',
-                subtitle: {
-                        text: 'Periode', // Tambahkan subjudul di sini
-                }
+                    text: 'DASHBOARD TRUE-FALSE ALARM'
+                },
+            subtitle: {
+                    text: 'Periode' 
             },
             xAxis: {
                 categories: ['Data A', 'Data B', 'Data C', 'Data D', 'Data E']
@@ -254,7 +260,10 @@
         // Data untuk grafik kedua
         var data2 = {
             title: {
-                text: 'DASHBOARD LEAD TIME INTERVENSI'
+                    text: 'DASHBOARD LEAD TIME INTERVENSI'
+                },
+            subtitle: {
+                    text: 'Periode'
             },
             xAxis: {
                 categories: ['Data A', 'Data B', 'Data C', 'Data D', 'Data E']
@@ -279,6 +288,4 @@
 
         // Inisialisasi grafik kedua
         Highcharts.chart('chart2', data2);
-    </script>
-</body>
-</html>
+</script>
