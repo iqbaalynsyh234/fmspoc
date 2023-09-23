@@ -69,7 +69,7 @@
     <!--<div class="alert alert-success" id="notifnya2" style="display: none;"></div>-->
     <div class="col-md-12">
       <div class="panel" id="panel_form">
-        <header class="panel-heading panel-heading-red" id="truck">Truck On Duty</header>
+        <header class="panel-heading panel-heading-red" id="truck">Truck On Duty3344</header>
         <div class="panel-body" id="bar-parent10">
 
           <div class="row">
@@ -422,7 +422,7 @@
           text: ''
         },
         subtitle: {
-          text: 'Truck On Duty ' + date
+          text: 'Truck On Duty333444 ' + date
         },
         accessibility: {
           announceNewData: {
