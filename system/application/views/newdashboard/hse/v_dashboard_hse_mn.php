@@ -155,7 +155,7 @@ function company_onchange() {
 												</select>
                                             </div>
 											<div class="col-lg-2 col-md-2">
-												<button class="btn btn-circle btn-success" id="btnsearchreport" type="submit" />Search</button>
+												<button class="btn btn-circle btn-success" id="btnsearchreport" type="submit">Search</button>
 												<img id="loader2" style="display:none;" src="<?php echo base_url();?>assets/images/ajax-loader.gif" />
 											</div>
 										</div>

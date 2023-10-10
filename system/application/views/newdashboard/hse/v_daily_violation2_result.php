@@ -2,9 +2,6 @@
 
 <div class="row">
 
-   
-
-
     <div class="col-lg-5 col-md-5 col-sm-12">
         <figure class="highcharts-figure" style="background-color: white; padding:2px;">
             <div id="loader2" style="display: none;" class="mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded" data-upgraded=",MaterialProgress">
@@ -138,7 +135,7 @@
         var master_v = '<?php echo json_encode($total_violation_units); ?>';
         var total_violation_units = JSON.parse(master_v);
         var master_v = '<?php echo json_encode($top_violation); ?>';
-        var top_violation = JSON.parse(master_v);
+        var top_violationn = JSON.parse(master_v);
 
 
         <?php if ($input['company'] == "all") {
@@ -176,7 +173,6 @@
 
 
     }
-
 
     function charttrilevel(data_fix, data_hour_fix, data_company_fix, data_violation_fix, total_data, date) {
 
@@ -320,7 +316,7 @@
                                     $(".highcharts-xaxis text").html("Hour");
 
                                     this.series.chart.setTitle({
-                                        text: "Total Violation : " + total_data
+                                        text: "Total Violationnnn : " + total_data
                                     }, {
                                         text: "Dashboard Trend Alert<br>" + date
                                     });
@@ -548,7 +544,7 @@
                                     this.series.chart.setTitle({
                                         text: "Total Overspeed : " + total_data
                                     }, {
-                                        text: "Dashboard Trend Alert<br>" + date
+                                        text: "Dashboard Trend Alert123444<br>" + date
                                     });
                                     total_title_lvl1 = 0;
                                     break;
@@ -563,7 +559,7 @@
                                     this.series.chart.setTitle({
                                         text: "Hour " + hr + " : " + total_title_lvl1 + " Overspeed"
                                     }, {
-                                        text: "Dashboard Trend Alert<br>" + date
+                                        text: "Periode<br>" + date
                                     });
 
                                     break;
@@ -692,7 +688,7 @@
                 text: 'This Title'
             },
             subtitle: {
-                text: 'Dashboard Trend Alert<br>' + date
+                text: 'Dashboard Trend Alert2344<br>' + date
             },
             accessibility: {
                 announceNewData: {

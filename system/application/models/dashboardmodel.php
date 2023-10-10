@@ -9,6 +9,13 @@ class Dashboardmodel extends Model {
 	$this->load->model("m_poipoolmaster");
 	}
 
+	public function getChartData() {
+        $query = $this->db->select('alarm_report_start_time, alarm_report_statusinterventation_up')
+        ->from('alarm_evidence_agustus_2023')
+        ->get();
+    	return $query->result_array();
+    }
+
 	function getvehicle_byownerforheatmap(){
 		$user_level          = $this->sess->user_level;
 		$user_company        = $this->sess->user_company;
@@ -44,7 +51,7 @@ class Dashboardmodel extends Model {
 		$q = $this->db->get("vehicle");
 		$rows = $q->result();
 		return $rows;
-		}
+	}
 
 	function getvehicle_byowner(){
 		$user_level          = $this->sess->user_level;
@@ -1508,6 +1515,17 @@ class Dashboardmodel extends Model {
 		$q2            = $this->db->get("vehicle");
 		return $q2->result_array();
 	}
+
+	function room(){
+        $query = $this->db->query("SELECT * from alarm_envidence");
+         
+        if($query->num_rows() > 0){
+            foreach($query->result() as $data){
+                $hasil[] = $data;
+            }
+            return $hasil;
+        }
+    }
 
 	function totaldevice(){
 		$user_level      = $this->sess->user_level;

@@ -436,7 +436,7 @@ Highcharts.chart('container', {
     type: 'pie'
   },
   title: {
-    text: 'VIOLATION BOARD'
+    text: 'VIOLATION BOARD333'
   },
   subtitle: {
     text: ''

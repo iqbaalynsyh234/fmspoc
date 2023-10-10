@@ -69,9 +69,10 @@
     <!--<div class="alert alert-success" id="notifnya2" style="display: none;"></div>-->
     <div class="col-md-12">
       <div class="panel" id="panel_form">
-        <header class="panel-heading panel-heading-red" id="truck">Truck On Duty3344</header>
+      <div class="card-header" style="text-align: center; font-size:large;">
+         <b>Dashboard Profile Control Room</b>
+      </div>
         <div class="panel-body" id="bar-parent10">
-
           <div class="row">
             <div class="input-group date form_date col-md-2 col-sm-5" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
               <input class="form-control" type="text" readonly name="date" id="startdate" value="<?= date('d-m-Y') ?>" onchange="dtdatechange()">
@@ -106,21 +107,8 @@
               </select>
             </div>
 
-            <div class="col-md-2 col-sm-5">
-              <select id="location" name="location" class="form-control select2" onchange="dtdatechange()">
-                <option value="0">-- All Location</option>
-                <option value="STREET.0">HAULING (jalur kosongan)</option>
-                <option value="STREET.1">HAULING (jalur muatan)</option>
-                <?php $nr = count($rlocation);
-
-                for ($z = 0; $z < $nr; $z++) {
-                  if ($rlocation[$z]->street_alias != "") {
-                    if ($rlocation[$z]->street_alias != "PORT BBC") {
-                      echo "<option value=\"" . $rlocation[$z]->street_alias . "\">" . $rlocation[$z]->street_alias . " </option>";
-                    }
-                  }
-                } ?>
-              </select>
+            <div class="col-lg-2 col-md-2">
+                <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit">Search</button>
             </div>
 
             <?php
@@ -166,6 +154,7 @@
             </div>
             <!-- start graphic -->
              <div class="col-lg-12 col-md-12 col-sm-12" id="viewgraphic" style="bottom:13px;">
+             <div class="col-lg-12 col-md-12 col-sm-12" id="viewgraphic2" style="bottom:13px;">
 
               <div class="row">
                 <div class="col-md" id="graphic_caption">
@@ -248,11 +237,13 @@
         $("#viewtable").show();
         $("#export_xcel").show();
         $("#viewgraphic").hide();
+        $("#viewgraphic2").hide();
 
       } else if (view == 1) {
         $("#viewtable").hide();
         $("#export_xcel").hide();
         $("#viewgraphic").show();
+        $("#viewgraphic2").hide();
 
       }
     }
@@ -381,13 +372,13 @@
       var colors = Highcharts.getOptions().colors,
         categories = data_hour,
 
-        name = 'Hour',
+        name = 'True',
         level = 0,
         data = datalvl0;
       chart = new Highcharts.Chart({
         chart: {
           renderTo: 'container_graphic',
-          type: 'column',
+          type: 'spline',
           events: {
             drilldown: function() {
               this.yAxis[0].removePlotLine('y-axis-plot-line-0');
@@ -418,11 +409,10 @@
           }
         },
         title: {
-          useHTML: true,
-          text: ''
-        },
+           text: 'DASHBOARD TRUE-FALSE ALARM'
+          },
         subtitle: {
-          text: 'Truck On Duty333444 ' + date
+          text: 'Periode<br>' + date
         },
         accessibility: {
           announceNewData: {
@@ -432,12 +422,12 @@
         xAxis: {
           categories: categories,
           title: {
-            text: 'Hour'
+            text: 'Periode (day)'
           }
         },
         yAxis: {
           title: {
-            text: 'Total Unit'
+            text: 'Percentage %'
           },
           max: maks,
           plotLines: [plotLine]
@@ -500,7 +490,7 @@
                     hour = h[1].split("</");
                     $(".highcharts-xaxis text").html(name);
                     this.series.chart.setTitle({
-                      text: "Hour : " + hour[0]
+                      text: "Periode : " + date
                     });
                     outputlabel = this.y + " unit";
                     xs = this.x;
@@ -703,7 +693,7 @@
       chart = new Highcharts.Chart({
         chart: {
           renderTo: 'container_graphic',
-          type: 'column',
+          type: 'spline',
           events: {
             drilldown: function() {
               this.yAxis[0].removePlotLine('y-axis-plot-line-0');
@@ -727,11 +717,10 @@
           }
         },
         title: {
-          useHTML: true,
-          text: ''
+          text: 'DASHBOARD TRUE-FALSE ALARM'
         },
         subtitle: {
-          text: 'Truck On Duty3345 ' + date
+          text: 'Periode</br>' + date
         },
         accessibility: {
           announceNewData: {
@@ -741,12 +730,12 @@
         xAxis: {
           categories: categories,
           title: {
-            text: 'Hour'
+            text: 'Periode (day)'
           }
         },
         yAxis: {
           title: {
-            text: 'Total Unit'
+            text: 'Percentage %'
           },
           max: maks,
           plotLines: [plotLine]

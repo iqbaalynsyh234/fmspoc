@@ -289,7 +289,7 @@ if ($totalvehicleingeofence == 0) {
              <li class="nav-item">
                <a href="<?php echo base_url() ?>abdiwatch/dashboard" class="nav-link">
                  <!-- <i class="material-icons">room</i> -->
-                 <span class="title">Dashboardadadadad</span>
+                 <span class="title">Dashboard</span>
                </a>
              </li>
            </ul>
@@ -389,6 +389,13 @@ if ($totalvehicleingeofence == 0) {
                <a href="<?= base_url(); ?>dashboard/post-event" class="nav-lin">
                  <span class="label label-rouded label-menu label-danger">new</span>
                  <span class="title">Dashboard Post Event</span>
+               </a>
+             </li>
+
+             <li class="nav-item">
+               <a href="<?= base_url(); ?>controlroom/room" class="nav-lin">
+                 <span class="label label-rouded label-menu label-danger">new</span>
+                 <span class="title">Dashboard Control Room</span>
                </a>
              </li>
 
@@ -1166,3 +1173,4 @@ if ($totalvehicleingeofence == 0) {
       </ul>
     </div>
   </div>
+</div>

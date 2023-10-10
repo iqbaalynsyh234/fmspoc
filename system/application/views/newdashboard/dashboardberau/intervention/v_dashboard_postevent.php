@@ -168,10 +168,10 @@ function company_onchange() {
                                                 <select id="periode" name="periode" id="periode" class="form-control select2" onchange="javascript:periode_onchange()" >
                                                   <option value="today">Today</option>
                                                     <option value="yesterday">Yesterday</option>
-													<option value="last7">Last 7 Days</option>
-													<option value="last30">Last 30 Days</option>
-													<option value="custom">Custom Date</option>
-												</select>
+													                        <option value="last7">Last 7 Days</option>
+													                          <option value="last30">Last 30 Days</option>
+													                        <option value="custom">Custom Date</option>
+												                        </select>
                                             </div>
 
                                         </div>
