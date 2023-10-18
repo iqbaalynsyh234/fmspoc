@@ -1,924 +1,372 @@
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/jquery/jquery.min.js"></script>
-
 <script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/data.js"></script>
-<script src="https://code.highcharts.com/modules/drilldown.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
-<style type="text/css">
-  /* edit style datepicker*/
-  .datetimepicker {
-    background: #4bb036;
-  }
-
-  #truck {
-    background-color: #221f1f;
-    color: white;
-  }
-
-  .prev,
-  .switch,
-  .next,
-  .today {
-    background: #FFF;
-  }
-
-  .dow {
-    color: #FFF;
-    padding: 6px;
-  }
-
-  .table-condensed tbody tr td {
-    color: #FFF;
-  }
-
-  .datetimepicker .datetimepicker-days table tbody tr td:hover {
-    background-color: #000;
-  }
-
-  .datetimepicker .datetimepicker-years table tbody tr td span:hover {
-    background-color: #000;
-  }
-
-  .datetimepicker .datetimepicker-months table tbody tr td span:hover {
-    background-color: #000;
-  }
-
-
-
-  /* edit Style graphic */
-  .highcharts-data-label text {
-    text-decoration: none;
-  }
-
-  .highcharts-drilldown-axis-label {
-    pointer-events: none;
-  }
-</style>
-<div class="sidebar-container">
-  <?= $sidebar; ?>
-</div>
-
-<div class="page-content-wrapper">
-  <div class="page-content">
-    <br>
-    <?php if ($this->session->flashdata('notif')) { ?>
-      <div class="alert alert-success" id="notifnya" style="display: none;"><?php echo $this->session->flashdata('notif'); ?></div>
-    <?php } ?>
-    <!--<div class="alert alert-success" id="notifnya2" style="display: none;"></div>-->
-    <div class="col-md-12">
-      <div class="panel" id="panel_form">
-      <div class="card-header" style="text-align: center; font-size:large;">
-         <b>Dashboard Profile Control Room</b>
-      </div>
-        <div class="panel-body" id="bar-parent10">
-          <div class="row">
-            <div class="input-group date form_date col-md-2 col-sm-5" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
-              <input class="form-control" type="text" readonly name="date" id="startdate" value="<?= date('d-m-Y') ?>" onchange="dtdatechange()">
-              <span class="input-group-addon"><span class="fa fa-calendar"></span></span>
-            </div>
-            <div class="col-md-2 col-sm-5">
-              <input type="hidden" id="total_vehicle" name="total_vehicle" value="">
-              <select id="shift" name="shift" class="form-control select2" onchange="dtdatechange()">
-                <option value="0">-- All Shift --</option>
-                <option value="1">Shift 1</option>
-                <option value="2">Shift 2</option>
-              </select>
-            </div>
-
-            <div class="col-md-2 col-sm-5">
-              <select id="viewdata" name="viewdata" class="form-control select2" onchange="viewchange()">
-                <option value="1">Graph view</option>
-                <option value="0">Table view</option>
-              </select>
-            </div>
-
-            <div class="col-md-2 col-sm-5">
-              <select class="form-control select2" id="company" name="company" onchange="dtdatechange()">
-                <option value="0" selected>--All Contractor</option>
-                <?php
-                $ccompany = count($rcompany);
-                for ($i = 0; $i < $ccompany; $i++) {
-
-                  echo "<option value='" . $rcompany[$i]->company_id . "'>" . $rcompany[$i]->company_name . "</option>";
-                }
-                ?>
-              </select>
-            </div>
-
-            <div class="col-lg-2 col-md-2">
-                <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit">Search</button>
-            </div>
-
-            <?php
-            //  echo "<pre>";
-            // var_dump($rcompany);
-            // var_dump($rlocation);
-            // echo "</pre>"; 
-            ?>
-
-            <div class="col-md-1 col-sm-3">
-              <button type="button" name="button" id="export_xcel" class="btn btn-primary btn-sm" style="display:none">Export Excel</button>
-            </div>
-
-          </div>
-          <div class="row">
-            <div class="col">
-              <!-- loader -->
-              <div id="loader" style="display: none;" class="mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded" data-upgraded=",MaterialProgress">
-                <div class="progressbar bar bar1" style="width: 0%;"></div>
-                <div class="bufferbar bar bar2" style="width: 100%;"></div>
-                <div class="auxbar bar bar3" style="width: 0%;"></div>
-              </div>
-              <!-- end loader -->
-
-            </div>
-          </div>
-
-          <div class="row">
-            <div id="valueHidden" style="display: none;"></div>
-            <div class="col-md-12" id="viewtable" style="display:none;">
-              <div id="isexport_xcel">
-                <div class="row">
-                  <div class="col-md-6">
-                    <b id="exceltitle"></b>
-                  </div>
-                  <div class="col-md-6">
-                    <p id="totalan" style="text-align:right;"></p>
-                  </div>
-                </div>
-                <table class="table table-striped table-bordered" id="content" style="font-size: 14px; overflow-y:auto;">
-                </table>
-              </div>
-            </div>
-            <!-- start graphic -->
-             <div class="col-lg-12 col-md-12 col-sm-12" id="viewgraphic" style="bottom:13px;">
-             <div class="col-lg-12 col-md-12 col-sm-12" id="viewgraphic2" style="bottom:13px;">
-
-              <div class="row">
-                <div class="col-md" id="graphic_caption">
-
-                </div>
-              </div>
-              <br>
-              <figure class="highcharts-figure">
-                <div id="container_graphic"></div>
-              </figure>
-             </div>
-            <!-- end graphic -->
-
-
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <script type="text/javascript" src="js/script.js"></script>
-  <script src="<?php echo base_url() ?>assets/dashboard/assets/js/jquery-1.7.1.min.js" type="text/javascript"></script>
-
-  <script type="text/javascript">
-    function dtdatechange() {
-      $("#loader").show();
-      var company = $("#company").val();
-      var location = $("#location").val();
-      var table_loc_name = $("#location").val();
-
-      var date = $("#startdate").val();
-      var shift = $("#shift").val();
-      var shiftname = "";
-      if (shift == 0) {
-        shiftname = "Semua Shift";
-      } else if (shift == 1) {
-        shiftname = "Shift 1";
-      } else {
-        shiftname = "Shift 2";
-      }
-      var data = {
-        date: date,
-        shift: shift,
-        company: company,
-        location: location
-      };
-      $("#totalan").html("");
-      $("#content").html("");
-      $("#container_graphic").html("");
-      $("#exceltitle").html("");
-      $("#valueHidden").html("");
-      jQuery.post("<?php echo base_url() ?>truck/search", data, function(response) {
-        console.log(response);
-        $("#loader").hide();
-
-        if (response.error) {
-          console.log(response);
-          alert(response.msg);
-        } else {
-          if (company == 0) {
-
-            charttrilevel(response.data_fix, response.data_company, response.data_hour, response.data_location, response.length_company, response.length_hour, response.total_unit_location, response.total_unit, response.total_unit_per_contractor, location, date, company);
-          } else {
-            charttrilevelbycompany(response.data_fix, response.data_company, response.data_hour, response.data_location, response.length_company, response.length_hour, response.total_unit_location, response.total_unit, response.total_unit_per_contractor, location, date, company);
-
-          }
-          createTable(response, table_loc_name);
-        }
-
-
-      }, "json");
-
-    }
-
-    function viewchange() {
-      var view = $("#viewdata").val();
-      if (view == 0) {
-        $("#viewtable").show();
-        $("#export_xcel").show();
-        $("#viewgraphic").hide();
-        $("#viewgraphic2").hide();
-
-      } else if (view == 1) {
-        $("#viewtable").hide();
-        $("#export_xcel").hide();
-        $("#viewgraphic").show();
-        $("#viewgraphic2").hide();
-
-      }
-    }
-
-    $(document).ready(function() {
-      //edit datepicker
-      $(".glyphicon-arrow-right").html(">>");
-      $(".glyphicon-arrow-left").html("<<");
-
-
-
-      dtdatechange();
-      jQuery("#export_xcel").click(function() {
-        window.open('data:application/vnd.ms-excel,' + encodeURIComponent(jQuery('#isexport_xcel').html()));
-      });
-
-    });
-
-
-    var chart;
-
-    function charttrilevel(data_fix, data_company, data_hour, data_location, length_company, length_hour, total_unit_location, total_unit, total_unit_per_contractor, location, date, company) {
-      var data = data_fix;
-      var data_company = data_company;
-      var data_location = data_location;
-      var data_hour = data_hour;
-      var length_company = length_company;
-      var length_hour = length_hour;
-      var total_unit_location = total_unit_location;
-      var total_unit = total_unit;
-      var total_unit_per_contractor = total_unit_per_contractor;
-      var location = location;
-      var company_selected = company;
-      var categories2 = [];
-      var datalvl0 = [];
-      var datalvl1 = [];
-      var datalvl2 = [];
-      var datalevel0 = [];
-      var datalevel1 = [];
-      var datalevel2 = [];
-      var totallevel0 = 0;
-      var totallevel1 = 0;
-      var totallevel2 = 0;
-      var y1 = 0;
-      var a = 0;
-      var b = 0;
-      var c = 0;
-      var n = 0;
-      var k = 0;
-      var dstat = 0;
-
-
-      var plotlin = -1;
-	  var maks = 10;
-     /*  var maks = null;
-      if (location == 0) {
-        plotlin = 0.8 * total_unit;
-        plotlin = Math.round(plotlin);
-        maks = Math.round(total_unit / 100) * 100;
-      } */
-
-
-      for (i = 0; i < data_hour.length; i++) {
-        n = 0;
-        totallevel1 = 0;
-        var pr = Object.keys(data[data_hour[i]]);
-        var html = "";
-        for (j = 0; j < pr.length; j++) {
-
-          dtlvl2 = data[data_hour[i]][pr[j]];
-          y1 = Object.keys(dtlvl2).length;
-
-          totallevel2 = 0;
-          datalvl2 = [];
-          for (k = 0; k < y1; k++) {
-            datalvl2.push(dtlvl2[k]['vehicle']);
-            totallevel2++;
-          }
-          html += "<textarea id=\"" + data_hour[i] + pr[j] + "\">" + datalvl2.sort() + "</textarea>";
-
-          datalvl1.push({
-            y: totallevel2
-
-          });
-          n = totallevel1 + totallevel2;
-          totallevel1 = n;
-        }
-        for (h = 0; h < pr.length; h++) {
-          pr[h] += "<br>" + total_unit_per_contractor[pr[h]];
-        }
-
-        datalvl0.push({
-          y: totallevel1,
-          z: data_hour[i],
-          color: "#4bb036",
-          drilldown: {
-            name: "Contractor <b style'display:none'>" + data_hour[i] + "</b>",
-            color: "#4bb036",
-            categories: pr,
-            level: 1,
-            data: datalvl1
-          }
-        });
-        datalvl1 = [];
-        k = totallevel0 + totallevel1;
-        totallevel0 = k;
-        html_old = $("#valueHidden").html();
-        html_old += html;
-
-        $("#valueHidden").html(html_old);
-
-      }
-
-      var plotLine = {
-        id: 'y-axis-plot-line-0',
-        color: '#4bb036',
-        width: 3,
-        value: plotlin,
-        dashStyle: 'shortdash',
-        label: {
-          text: '80%'
-        }
-      }
-
-
-      var colors = Highcharts.getOptions().colors,
-        categories = data_hour,
-
-        name = 'True',
-        level = 0,
-        data = datalvl0;
-      chart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'container_graphic',
-          type: 'spline',
-          events: {
-            drilldown: function() {
-              this.yAxis[0].removePlotLine('y-axis-plot-line-0');
-              var cs = this.series[0];
-              if (cs != undefined) {
-                this.yAxis[0].update({
-                  max: null
-                });
-              }
-              dstat = 0;
-            },
-            redraw: function() {
-              var cs = this.series[0];
-              if (cs != undefined) {
-                lvl = this.series[0].options.level;
-                if (lvl == 0) {
-                  this.yAxis[0].addPlotLine(plotLine);
-                  dstat++;
-                  if (dstat == 2) {
-                    this.yAxis[0].update({
-                      max: maks
-                    });
-                  }
-                }
-              }
-            }
-
-          }
-        },
-        title: {
-           text: 'DASHBOARD TRUE-FALSE ALARM'
-          },
-        subtitle: {
-          text: 'Periode<br>' + date
-        },
-        accessibility: {
-          announceNewData: {
-            enabled: true
-          }
-        },
-        xAxis: {
-          categories: categories,
-          title: {
-            text: 'Periode (day)'
-          }
-        },
-        yAxis: {
-          title: {
-            text: 'Percentage %'
-          },
-          max: maks,
-          plotLines: [plotLine]
-        },
-        legend: {
-          enabled: false
-        },
-        plotOptions: {
-          column: {
-            cursor: 'pointer',
-            point: {
-              events: {
-                click: function() {
-                  var drilldown = this.drilldown;
-                  if (drilldown) {
-                    setChart(drilldown.name, drilldown.categories, drilldown.data, drilldown.color, drilldown.level);
-                  } else { // restore
-                    setChart(name, categories, data, null, level);
-                  }
-
-                }
-              }
-            },
-            dataLabels: {
-              enabled: true,
-              formatter: function() {
-                var persen = 0;
-                var outputlabel = "";
-                switch (this.series.options.level) {
-                  case 0:
-
-                    if (location == 0) {
-                      persen = (this.y / total_unit) * 100;
-                      persen = Math.round(persen);
-                      title = "Total Unit All Contractor : " + total_unit;
-
-                      outputlabel = this.y + " unit <br>" + persen + "%";
-                    } else {
-                      outputlabel = this.y + " unit";
-                      if (location == "STREET.0") {
-                        title = "Total Unit di HAULING Jalur Kosongan : " + total_unit_location;
-                      } else if (location == "STREET.1") {
-                        title = "Total Unit di HAULING Jalur Muatan : " + total_unit_location;
-                      } else {
-                        title = "Total Unit di " + location + " : " + total_unit_location;
-                      }
-                    }
-
-
-
-
-                    $(".highcharts-xaxis text").html("Hour");
-                    this.series.chart.setTitle({
-                      text: title
-                    });
-                    break;
-                  case 1:
-                    var name = this.series.options.name;
-                    h = name.split("e'>");
-                    hour = h[1].split("</");
-                    $(".highcharts-xaxis text").html(name);
-                    this.series.chart.setTitle({
-                      text: "Periode : " + date
-                    });
-                    outputlabel = this.y + " unit";
-                    xs = this.x;
-                    xs = String(xs);
-                    xslength = xs.search("<br>");
-                    if (xslength > 1) {
-                      tu = xs.split("<br>");
-                      totalUnit = parseInt(tu[1]);
-                      pcn = (this.y / totalUnit) * 100;
-                      persen = Math.round(pcn);
-                      outputlabel += "<br>" + persen + "%";
-                    }
-
-                    break;
-                }
-
-                return outputlabel;
-              }
-            }
-          }
-        },
-        tooltip: {
-          useHTML: true,
-          style: {
-            color: "#000000"
-          },
-          backgroundColor: '#FCFFC5',
-          formatter: function() {
-            var key = this.key;
-            if (key == undefined) {
-              key = "";
-            }
-            var y = this.y;
-            var point = this.point,
-              s = '';
-
-            switch (this.series.options.level) {
-              case 0:
-                s = 'Hour: ' + key + ' <br/>';
-                s += y + ' unit';
-                break;
-
-              case 1:
-                s += y + ' unit<br>';
-                if (key.length > 2) {
-                  exp = key.split("<br>");
-                  key = exp[0];
-                  name = this.series.name;
-                  exp = name.split("e'>");
-                  name = exp[1].split("<");
-
-                  idn = name[0] + key;
-                  units = $("#" + idn).html();
-                  newunits = units.replace(/,/g, " - ");
-                  s += newunits;
-                }
-                break;
-            }
-
-
-            return s;
-          }
-        },
-        series: [{
-          name: name,
-          level: level,
-          data: data,
-          color: "#4bb036"
-        }],
-        drilldown: {
-          activeAxisLabelStyle: {
-            textDecoration: 'none',
-            color: '#000000'
-          },
-          activeDataLabelStyle: {
-            color: "#000000",
-            textDecoration: "none"
-          }
-        }
-      });
-    }
-
-    function charttrilevelbycompany(data_fix, data_company, data_hour, data_location, length_company, length_hour, total_unit_location, total_unit, total_unit_per_contractor, location, date, company) {
-      var data = data_fix;
-      var data_company = data_company;
-      var data_location = data_location;
-      var data_hour = data_hour;
-      var length_company = length_company;
-      var length_hour = length_hour;
-      var total_unit_location = total_unit_location;
-      var total_unit = total_unit;
-      var total_unit_per_contractor = total_unit_per_contractor;
-      var location = location;
-      var company_selected = company;
-      var categories2 = [];
-      var datalvl0 = [];
-      var datalvl1 = [];
-      var datalvl2 = [];
-      var datalevel0 = [];
-      var datalevel1 = [];
-      var datalevel2 = [];
-      var totallevel0 = 0;
-      var totallevel1 = 0;
-      var totallevel2 = 0;
-      var y1 = 0;
-      var a = 0;
-      var b = 0;
-      var c = 0;
-      var n = 0;
-      var k = 0;
-      var dstat = 0;
-      var html = "";
-
-      var plotlin = -1;
-      var maks = null;
-      if (location == 0) {
-        plotlin = 0.8 * total_unit;
-        plotlin = Math.round(plotlin);
-        maks = total_unit;
-      }
-
-
-      for (i = 0; i < data_hour.length; i++) {
-        n = 0;
-        totallevel1 = 0;
-        var pr = Object.keys(data[data_hour[i]]);
-
-        for (j = 0; j < pr.length; j++) {
-          dtlvl2 = data[data_hour[i]][pr[j]];
-          y1 = Object.keys(dtlvl2).length;
-          totallevel2 = 0;
-          categories2 = [];
-          datalvl2 = [];
-          var lvllocation = "";
-          if (location == 0) {
-            lvllocation = "All Location";
-          } else if (location == "STREET.0") {
-            lvllocation = "Hauling Kosongan";
-          } else if (location == "STREET.1") {
-            lvllocation = "Hauling Muatan";
-          }
-          categories2[0] = lvllocation;
-          for (k = 0; k < y1; k++) {
-            datalvl2.push(dtlvl2[k]['vehicle']);
-            totallevel2++;
-          }
-          datalevel2 = {
-            level: 2,
-            z: data_hour[i],
-            color: "#4bb036",
-            name: "Lokasi <b style'display:none'>" + data_hour[i] + "<b>",
-            categories: categories2,
-            data: datalvl2
-          };
-
-          datalvl1.push({
-            y: totallevel2,
-            z: data_hour[i],
-          });
-          n = totallevel1 + totallevel2;
-          totallevel1 = n;
-
-        }
-        html = "<textarea id=\"" + data_hour[i] + "\">" + datalvl2.sort() + "</textarea>";
-        for (h = 0; h < pr.length; h++) {
-          pr[h] += "<br>" + total_unit;
-        }
-
-        datalvl0.push({
-          y: totallevel1,
-          color: "#4bb036",
-        });
-        datalvl1 = [];
-        k = totallevel0 + totallevel1;
-        totallevel0 = k;
-        html_old = $("#valueHidden").html();
-        html_old += html;
-        $("#valueHidden").html(html_old);
-
-      }
-
-
-      var plotLine = {
-        id: 'y-axis-plot-line-0',
-        color: '#4bb036',
-        width: 3,
-        value: plotlin,
-        dashStyle: 'shortdash',
-        label: {
-          text: '80%'
-        }
-      }
-
-
-      var colors = Highcharts.getOptions().colors,
-        categories = data_hour,
-        name = 'Hour',
-        level = 0,
-        data = datalvl0;
-      chart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'container_graphic',
-          type: 'spline',
-          events: {
-            drilldown: function() {
-              this.yAxis[0].removePlotLine('y-axis-plot-line-0');
-              var cs = this.series[0];
-              if (cs != undefined) {
-                this.yAxis[0].update({
-                  max: null
-                });
-              }
-            },
-            redraw: function() {
-              var cs = this.series[0];
-              if (cs != undefined) {
-                lvl = this.series[0].options.level;
-                if (lvl == 0) {
-                  this.yAxis[0].addPlotLine(plotLine);
-                }
-              }
-            }
-
-          }
-        },
-        title: {
-          text: 'DASHBOARD TRUE-FALSE ALARM'
-        },
-        subtitle: {
-          text: 'Periode</br>' + date
-        },
-        accessibility: {
-          announceNewData: {
-            enabled: true
-          }
-        },
-        xAxis: {
-          categories: categories,
-          title: {
-            text: 'Periode (day)'
-          }
-        },
-        yAxis: {
-          title: {
-            text: 'Percentage %'
-          },
-          max: maks,
-          plotLines: [plotLine]
-        },
-        legend: {
-          enabled: false
-        },
-        plotOptions: {
-          column: {
-            cursor: 'pointer',
-            dataLabels: {
-              enabled: true,
-              formatter: function() {
-                var persen = 0;
-                var outputlabel = "";
-                switch (this.series.options.level) {
-                  case 0:
-                    if (location == 0) {
-                      persen = (this.y / total_unit) * 100;
-                      persen = Math.round(persen);
-                      title = "Total Unit " + data_company[0] + " : " + total_unit;
-
-                      outputlabel = this.y + " unit <br>" + persen + "%";
-                    } else {
-                      outputlabel = this.y + " unit";
-                      if (location == "STREET.0") {
-                        title = "Total Unit " + data_company[0] + " di HAULING Jalur Kosongan : " + total_unit_location;
-                      } else if (location == "STREET.1") {
-                        title = "Total Unit " + data_company[0] + " di HAULING Jalur Muatan : " + total_unit_location;
-                      } else {
-                        title = "Total Unit " + data_company[0] + " di " + location + " : " + total_unit_location;
-                      }
-                    }
-
-
-
-                    $(".highcharts-xaxis text").html(this.series.options.name);
-                    this.series.chart.setTitle({
-                      text: title
-                    });
-                    break;
-                }
-                return outputlabel;
-              }
-            }
-          }
-        },
-        tooltip: {
-          useHTML: true,
-          style: {
-            color: "#000000"
-          },
-          backgroundColor: '#FCFFC5',
-          formatter: function() {
-            var key = this.key;
-            if (key == undefined) {
-              key = "";
-            }
-            var y = this.y;
-            var point = this.point,
-              s = '';
-
-            switch (this.series.options.level) {
-              case 0:
-                s = 'Hour: ' + key + ' <br/>';
-                s += y + ' unit <br>';
-                units = $("#" + key).html();
-                newunits = units.replace(/,/g, " - ");
-                s += newunits;
-                break;
-            }
-            return s;
-          }
-        },
-        series: [{
-          name: name,
-          level: level,
-          data: data,
-          color: "#4bb036"
-        }]
-        // exporting: {
-        //   enabled: false
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/data.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/drilldown.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/exporting.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/export-data.js"></script>
+<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/accessibility.js"></script>
+
+
+<link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
+<script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
+<script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
+
+<script>
+    function frmsearch_onsubmit() {
+        var company = $("#company").val();
+        // var vehicle = $("#vehicle").val();
+        // var violation = $("#violation").val();
+        var periode = $("#periode").val();
+        // if (company != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
         // }
-      });
+        // if (vehicle != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
+        // }
+        // if (violation != "all") {
+        //     alert("Data Not Ready");
+        //     return false;
+        // }
+        if (periode == "this_month") {
+            if (company == "all") {
+                alert("1 month data only for specific contractors!");
+                return false;
+            }
+        }
+        page();
+        return false;
     }
 
-    function setChart(name, categories, data, color, level) {
-      chart.xAxis[0].setCategories(categories);
-      chart.series[0].remove();
+    function updateCharts(data) {
+            // Update data for the first chart
+            data1.xAxis.categories = data.list_periode;
+            data1.series[0].data = data.list_alarm_true;
+            data1.series[1].data = data.list_alarm_false;
+    }
 
+    function page() {
+        // if (p == undefined) {
+        //     p = 0; 
+        // }
+        // jQuery("#offset").val(p);
+        jQuery("#result").hide();
+        jQuery("#loader").show();
 
-      chart.addSeries({
-        name: name,
-        data: data,
-        level: level,
-        color: "#4bb036"
-      });
+        jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
+        function (r) {
+            if (r.error) {
+                console.log(r);
+                alert(r.message);
+                jQuery("#loader").hide();
+                jQuery("#result").hide();
+                return;
+            } else {
+                console.log(r);
 
+                // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
+                dataChart1.series[0].data = r.dataChart1True; // Ganti dengan data True dari hasil pencarian
+                dataChart1.series[1].data = r.dataChart1False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart1);
+
+                dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
+                dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
+                Highcharts.chart('chart1', dataChart2);
+
+                jQuery("#loader").hide();
+                jQuery("#result").html(r.html);
+                jQuery("#result").show();
+            }
+          }, "json"
+      );
+    }
+
+    function periode_onchange() {
+        var data_periode = jQuery("#periode").val();
+        if (data_periode == 'custom') {
+            jQuery("#mn_sdate").show();
+            jQuery("#mn_edate").show();
+        } else {
+            jQuery("#mn_sdate").hide();
+            jQuery("#mn_edate").hide();
+
+        }
 
     }
 
-    function createTable(response, table_loc_name) {
-      var length_company = response.length_company;
-      var length_hour = response.length_hour;
-      var data_company = response.data_company;
-      var data_hour = response.data_hour;
-      var total_unit = response.total_unit;
-      var total_unit_per_contractor = response.total_unit_per_contractor;
-      var data = response.data_fix;
-      var totalin = 0;
-      var totalan = 0;
-      var cek = "";
-      var date = $("#startdate").val();
-      var shift = $("#shift").val();
-      var shiftname = "";
-      if (shift == 0) {
-        shiftname = "Semua Shift";
-      } else if (shift == 1) {
-        shiftname = "Shift 1";
-      } else {
-        shiftname = "Shift 2";
-      }
-      var html = "";
-      var locname = table_loc_name;
-      if (locname == "STREET.0") {
-        table_loc_name = " HAULING Jalur Kosongan";
-      } else if (locname == "STREET.1") {
-        table_loc_name = " HAULING Jalur Muatan";
-      } else if (locname == 0) {
-        table_loc_name = " Semua Lokasi";
-      } else {
-        table_loc_name = " " + locname;
-      }
-      html += `<thead><tr>
-                      <th style="text-align:center;">Hour</th>`;
-      if (length_company == 1) {
-        html += '<th style="text-align:center;">' + data_company[0] + '<br><span>' + total_unit + '</span></th>';
-      } else {
-        for (var i = 0; i < length_company; i++) {
-          html += '<th style="text-align:center;">' + data_company[i] + '<br><span>' + total_unit_per_contractor[data_company[i]] + '</span></th>';
-        }
-      }
-      html += `   <th style="text-align:center;">Total</th>
-                  </tr></thead><tbody>`;
-      for (var j = 0; j < length_hour; j++) {
-        n = 0;
-        total = 0;
-        html += `<tr><th style="text-align:center;">` + data_hour[j] + `</th>`;
-
-        for (var k = 0; k < length_company; k++) {
-          cek = data[data_hour[j]][data_company[k]];
-          if (cek == undefined) {
-
-            html += `<td style="text-align:center;"></td>`;
-          } else {
-            pr = Object.keys(data[data_hour[j]][data_company[k]]).length;
-            if (length_company == 1) {
-              persen = (pr / total_unit) * 100;
-            } else {
-              persen = (pr / total_unit_per_contractor[data_company[k]]) * 100;
-
-            }
-            persen = Math.round(persen);
-            if (persen < 80) {
-              color = "red";
-            } else {
-              color = "blue";
-            }
-            html += `<td style="text-align:center;">` + pr + ` <span style="color:` + color + `">(` + persen + `%)</span> </td>`;
-            x = n + pr;
-            n = x;
-          }
-        }
-        totalin = totalan + n;
-        totalan = totalin;
-        html += `<th style="text-align:center;">` + n + `</th></tr>`;
-      }
-      totalavg = totalan / length_hour;
-      totalavg = Math.round(totalavg);
-      html += `</tbody>`;
-      $("#content").html(html);
-      $("#totalan").html(`Total Unit Rata-rata ` + shiftname + ` : <b>` + totalavg + ` &nbsp; </b>`);
-      $("#exceltitle").html("Data DT Operasional tanggal " + date + " " + table_loc_name);
-      return false;
+      function company_onchange() {
+        var data_company = jQuery("#company").val();
+        var dc = data_company.split("@");
+        var site = "<?= base_url() ?>hse/get_vehicle_by_company/" + dc[0];
+        jQuery.ajax({
+            url: site,
+            success: function(response) {
+                jQuery("#vehicle").html("");
+                jQuery("#vehicle").html(response);
+            },
+            dataType: "html"
+        });
     }
   </script>
+
+</script>
+
+</head>
+
+<body>
+ <!-- start sidebar menu -->
+    <div class="sidebar-container">
+        <?= $sidebar; ?>
+    </div>
+    <!-- end sidebar menu -->
+
+    <!-- start page content -->
+    <div class="page-content-wrapper">
+         <div class="page-content">
+            <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
+            <div class="row">
+                <div class="col-md-12 col-sm-12">
+                    <div class="panel"id="myChart">
+                        <div class="card-header" style="text-align: center; font-size:large;">
+                            <b>Dashboard Profile Control Room</b>
+                        </div>
+                        <div class="panel-body" id="bar-parent10">
+                            <div class="form-group row">
+                                <div class="col-lg-2 col-md-2">
+                                    <!--<select id="contractor" name="contractor" class="form-control select2" >-->
+                                    <select class="form-control select2" id="company" name="company" onchange="javascript:company_onchange()">
+
+                                        <?php
+                                        $pc = $this->sess->user_id_role;
+                                        if (($pc == 0) || ($pc == 1) || ($pc == 2) || ($pc == 3) || ($pc == 4)) {
+                                            echo '<option value="all">--All Contractor</option>';
+                                        }
+                                        $ccompany = count($rcompany);
+                                        for ($i = 0; $i < $ccompany; $i++) {
+                                            echo "<option value='" . $rcompany[$i]->company_id ."'>" . $rcompany[$i]->company_name . "</option>";
+                                        }
+                                        ?>
+                                        
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-2" style="display: none;">
+                                    <select id="vehicle" name="vehicle" class="form-control select2">
+                                        <option value="all">--All Vehicle</option>
+                                        <?php
+                                        // $cvehicle = count($rvehicle);
+                                        // for ($i = 0; $i < $cvehicle; $i++) {
+                                        //     echo "<option value='" . $rvehicle[$i]->vehicle_imei . "/" . $rvehicle[$i]->vehicle_device . "/" . $rvehicle[$i]->vehicle_company . "'>" . $rvehicle[$i]->vehicle_no . "</option>";
+                                        // }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
+                                        <option value="all">--All Violation</option>
+                                        <?php
+                                        for ($i = 0; $i < sizeof($violationmaster); $i++) {?>
+                                        <option value=<?php echo $violationmaster[$i]["alarmmaster_id"] ?>><?php echo $violationmaster[$i]["alarmmaster_name"] ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    <!-- <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
+                                        <input class="form-control" type="text" readonly name="date" id="startdate" value="<?= date("d-m-Y"); ?>">
+                                        <span class=" input-group-addon"><span class="fa fa-calendar"></span></span>
+                                    </div> -->
+                                    <!-- <select id="periode" name="periode" id="periode" class="form-control select2"> -->
+                                    <select name="periode" id="periode" class="form-control select2" onchange="javascript:periode_onchange()">
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="last7">Last 7 Days</option>
+                                        <option value="this_month">This Month</option>
+                                        <option value="custom">Custom Date</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit" style="margin-left: 30px;">Search</button>
+                                    <!-- <img id="loader2" style="display:none;" src="<?php echo base_url(); ?>assets/images/ajax-loader.gif" /> -->
+                                </div>
+                            </div>
+                            <div class="form-group row" id="mn_sdate" style="display:none;">
+                                <div class="col-lg-2 col-md-2">
+                                    <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
+                                        <input class="form-control" type="text" readonly name="sdate" id="startdate" value="<?= date("d-m-Y"); ?>">
+                                        <span class=" input-group-addon"><span class="fa fa-calendar"></span></span>
+                                    </div>
+                                </div>
+                                <div class="col-lg-1 col-md-1">
+                                    s/d
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    <div class="input-group date form_date" data-date="" data-date-format="dd-mm-yyyy" data-link-field="dtp_input2" data-link-format="yyyy-mm-dd">
+                                        <input class="form-control" type="text" readonly name="edate" id="endtdate" value="<?= date("d-m-Y"); ?>">
+                                        <span class=" input-group-addon"><span class="fa fa-calendar"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="loader" style="display: none;" class="mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded" data-upgraded=",MaterialProgress">
+                                <div class="progressbar bar bar1" style="width: 0%;"></div>
+                                <div class="bufferbar bar bar2" style="width: 100%;"></div>
+                                <div class="auxbar bar bar3" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+    </form>
+
+    <div id="chart1" style="width: 50%; float: left;"></div>
+    <div id="chart2" style="width: 50%; float: left;"></div>
+
+    <?php //echo "<pre>" , var_dump($dataChart); ?>
+
+    <script>
+        function frmsearch_onsubmit(){
+            const company = document.getElementById('company').value;
+            const violation = document.getElementById('violationmasterselect').value;
+            const periode = document.getElementById('periode').value;
+            const startDate = document.getElementById('startdate').value;
+            const endDate = document.getElementById('endtdate').value; 
+
+            // var uri = "<?=base_url() . 'controlroom/room'?>";
+            jQuery("#loader").show();
+		    jQuery.post("<?=base_url()?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
+                function(r)
+                {
+                    jQuery("#loader").hide();
+                    if (r.error)
+                    {
+                        alert(r.message);
+                        return false;
+                    }
+
+                    var data1 = {
+                        title: {
+                                text: 'DASHBOARD TRUE-FALSE ALARM'
+                            },
+                        subtitle: {
+                            text: 'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value 
+                        },
+                        xAxis: {
+                            type: 'datetime', // Set the type to 'datetime' to display dates
+                            title: {
+                                text: 'Periode (Day)'
+                            },
+                            categories: r.list_periode, 
+                        },
+                        yAxis: {
+                            title: {
+                                text: 'Percentage %'
+                            },
+                        }, 
+                        series: [{
+                            name: 'True',
+                            data: r.list_alarm_true,  // Use the true count data from PHP
+                            color: 'green' // Warna untuk seri "True"
+                        },
+                        {
+                            name: 'False', // Nama series baru
+                            data: r.list_alarm_false, 
+                            color: 'black'
+                        }]
+                    };
+
+                     // Inisialisasi grafik pertama
+                    Highcharts.chart('chart1', data1);
+
+                    var data2 = {
+                        title: {
+                                text: 'DASHBOARD LEAD TIME INTERVENSI'
+                            },
+                        subtitle: {
+                                text:  'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value  // function get element by id
+                        },
+                        xAxis: {
+                            categories: ['08-01', '08-01', '08-01', '08-01', '08-01']
+                        },
+                        series: [{
+                            name: 'Delay',
+                            data: [10, 4, 7, 2, 8],
+                            color: 'green'
+                        },
+                        {
+                            name: 'On time', // Nama series baru
+                            data: [3, 6, 8, 1, 5], // Data series baru
+                            color: 'black'
+                        }]
+                    };
+                    // Inisialisasi grafik kedua
+                    Highcharts.chart('chart2', data2);
+                }
+                , "json"
+            );
+            return false;
+        }
+
+    </script>
+
+    <script>
+         // Fungsi untuk mengambil nilai dari parameter $_GET berdasarkan namanya
+            function getParameterByName(name, url) {
+              if (!url) url = window.location.href;
+                name = name.replace(/[\[\]]/g, "\\$&");
+                var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                    results = regex.exec(url);
+                    if (!results) return null;
+                    if (!results[2]) return '';
+                    return decodeURIComponent(results[2].replace(/\+/g, " "));
+                }
+
+         // Get Paramater by id dari parameter $_GET yang diperlukan //
+         const companyValue = getParameterByName('company');
+         const violationValue = getParameterByName('violation');
+         const periodeValue = getParameterByName('periode');
+         const startDateValue = getParameterByName('sdate');
+         const endDateValue = getParameterByName('edate');
+    </script>
+
+
+    <script>
+        // Data untuk grafik pertama
+
+        // Data untuk grafik kedua
+        var data2 = {
+            title: {
+                    text: 'DASHBOARD LEAD TIME INTERVENSI'
+                },
+            subtitle: {
+                    text: 'Periode'
+            },
+            xAxis: {
+                categories: ['08-01', '08-01', '08-01', '08-01', '08-01']
+            },
+            series: [{
+                name: 'Delay',
+                data: [10, 4, 7, 2, 8],
+                color: 'green'
+            },
+            {
+                name: 'On time', // Nama series baru
+                data: [3, 6, 8, 1, 5], // Data series baru
+                color: 'black'
+            }]
+        };
+
+        // Inisialisasi grafik jika data ada
+        if (<?php echo json_encode($data['error']); ?> === false) {
+            Highcharts.chart('chart1', data);
+        }       
+
+        // Inisialisasi grafik kedua
+        Highcharts.chart('chart2', data2);
+
+       
+
+        // Inisialisasi grafik kedua
+        Highcharts.chart('chart2', data2); 
+
+    </script>
