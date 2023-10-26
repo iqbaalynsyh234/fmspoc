@@ -1,10 +1,8 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/data.js"></script>
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/drilldown.js"></script>
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/exporting.js"></script>
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/export-data.js"></script>
-<script src="<?php echo base_url(); ?>assets/dashboard/assets/plugins/highcharts/modules/accessibility.js"></script>
-
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
 <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
@@ -16,18 +14,6 @@
         // var vehicle = $("#vehicle").val();
         // var violation = $("#violation").val();
         var periode = $("#periode").val();
-        // if (company != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
-        // if (vehicle != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
-        // if (violation != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
         if (periode == "this_month") {
             if (company == "all") {
                 alert("1 month data only for specific contractors!");
@@ -43,42 +29,9 @@
             data1.xAxis.categories = data.list_periode;
             data1.series[0].data = data.list_alarm_true;
             data1.series[1].data = data.list_alarm_false;
-    }
+            data2.series[2].data = data.list_delay;
+            data2.series[2].data = data.list_ontime;
 
-    function page() {
-        // if (p == undefined) {
-        //     p = 0; 
-        // }
-        // jQuery("#offset").val(p);
-        jQuery("#result").hide();
-        jQuery("#loader").show();
-
-        jQuery.post("<?= base_url(); ?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
-        function (r) {
-            if (r.error) {
-                console.log(r);
-                alert(r.message);
-                jQuery("#loader").hide();
-                jQuery("#result").hide();
-                return;
-            } else {
-                console.log(r);
-
-                // Update data grafik chart1 dan chart2 dengan data dari hasil pencarian
-                dataChart1.series[0].data = r.dataChart1True; // Ganti dengan data True dari hasil pencarian
-                dataChart1.series[1].data = r.dataChart1False; // Ganti dengan data False dari hasil pencarian
-                Highcharts.chart('chart1', dataChart1);
-
-                dataChart2.series[0].data = r.dataChart2True; // Ganti dengan data True dari hasil pencarian
-                dataChart2.series[1].data = r.dataChart2False; // Ganti dengan data False dari hasil pencarian
-                Highcharts.chart('chart1', dataChart2);
-
-                jQuery("#loader").hide();
-                jQuery("#result").html(r.html);
-                jQuery("#result").show();
-            }
-          }, "json"
-      );
     }
 
     function periode_onchange() {
@@ -127,8 +80,8 @@
             <div class="row">
                 <div class="col-md-12 col-sm-12">
                     <div class="panel"id="myChart">
-                        <div class="card-header" style="text-align: center; font-size:large;">
-                            <b>Dashboard Profile Control Room</b>
+                        <div class="card-header" style="text-align: center; font-size:22px;">
+                            <b>DASHBOARD PROFILE CONTROL ROOM</b>
                         </div>
                         <div class="panel-body" id="bar-parent10">
                             <div class="form-group row">
@@ -160,13 +113,14 @@
                                         ?>
                                     </select>
                                 </div>
-                                <div class="col-lg-2 col-md-2">
+                                <div class="col-lg-2 col-md-3">
                                     <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
                                         <option value="all">--All Violation</option>
-                                        <?php
-                                        for ($i = 0; $i < sizeof($violationmaster); $i++) {?>
-                                        <option value=<?php echo $violationmaster[$i]["alarmmaster_id"] ?>><?php echo $violationmaster[$i]["alarmmaster_name"] ?></option>
-                                        <?php } ?>
+                                            <option value="call">Call</option>
+                                            <option value="cardistance">Car Distance</option>
+                                            <option value="distracted">Distracted</option>
+                                            <option value="fatigue">Fatigue</option>
+                                            <option value="overspeed" selected>Overspeed</option>
                                     </select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
@@ -237,6 +191,10 @@
 		    jQuery.post("<?=base_url()?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
                 function(r)
                 {
+                    // console.log("List Delay:", r.list_delay);
+                    // console.log("List alarm true: ", r.list_alarm_true);
+                    // console.log("List Ontime:", r.list_ontime);
+
                     jQuery("#loader").hide();
                     if (r.error)
                     {
@@ -252,7 +210,7 @@
                             text: 'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value 
                         },
                         xAxis: {
-                            type: 'datetime', // Set the type to 'datetime' to display dates
+                            type: 'datetime', 
                             title: {
                                 text: 'Periode (Day)'
                             },
@@ -265,108 +223,56 @@
                         }, 
                         series: [{
                             name: 'True',
-                            data: r.list_alarm_true,  // Use the true count data from PHP
-                            color: 'green' // Warna untuk seri "True"
+                            data: r.list_alarm_true,  
+                            color: 'green' 
                         },
                         {
-                            name: 'False', // Nama series baru
+                            name: 'False', 
                             data: r.list_alarm_false, 
                             color: 'black'
                         }]
                     };
 
-                     // Inisialisasi grafik pertama
+                    // Inisialisasi grafik pertama
                     Highcharts.chart('chart1', data1);
-
+                    
                     var data2 = {
+                    title: {
+                        text: 'DASHBOARD LEAD TIME INTERVENSI'
+                    },
+                    subtitle: {
+                        text: 'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value
+                    },
+                    xAxis: {
+                        type: 'datetime', 
                         title: {
-                                text: 'DASHBOARD LEAD TIME INTERVENSI'
-                            },
-                        subtitle: {
-                                text:  'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value  // function get element by id
+                            text: 'Periode (Day)'
                         },
-                        xAxis: {
-                            categories: ['08-01', '08-01', '08-01', '08-01', '08-01']
+                        categories: r.list_periode,
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Total'
                         },
-                        series: [{
-                            name: 'Delay',
-                            data: [10, 4, 7, 2, 8],
-                            color: 'green'
-                        },
-                        {
-                            name: 'On time', // Nama series baru
-                            data: [3, 6, 8, 1, 5], // Data series baru
-                            color: 'black'
-                        }]
-                    };
-                    // Inisialisasi grafik kedua
-                    Highcharts.chart('chart2', data2);
-                }
-                , "json"
-            );
-            return false;
-        }
+                    }, 
+                    series: [{
+                        name: 'Delay',
+                        data: r.list_delay,
+                        color: 'green'
+                    },
+                    {
+                        name: 'On time', 
+                        data: r.list_ontime, 
+                        color: 'black'
+                    }]
+                };
+                // Inisialisasi grafik kedua
+                Highcharts.chart('chart2', data2);
+            }
+            , "json"
+        );
+        return false;
+    }
 
     </script>
-
-    <script>
-         // Fungsi untuk mengambil nilai dari parameter $_GET berdasarkan namanya
-            function getParameterByName(name, url) {
-              if (!url) url = window.location.href;
-                name = name.replace(/[\[\]]/g, "\\$&");
-                var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                    results = regex.exec(url);
-                    if (!results) return null;
-                    if (!results[2]) return '';
-                    return decodeURIComponent(results[2].replace(/\+/g, " "));
-                }
-
-         // Get Paramater by id dari parameter $_GET yang diperlukan //
-         const companyValue = getParameterByName('company');
-         const violationValue = getParameterByName('violation');
-         const periodeValue = getParameterByName('periode');
-         const startDateValue = getParameterByName('sdate');
-         const endDateValue = getParameterByName('edate');
-    </script>
-
-
-    <script>
-        // Data untuk grafik pertama
-
-        // Data untuk grafik kedua
-        var data2 = {
-            title: {
-                    text: 'DASHBOARD LEAD TIME INTERVENSI'
-                },
-            subtitle: {
-                    text: 'Periode'
-            },
-            xAxis: {
-                categories: ['08-01', '08-01', '08-01', '08-01', '08-01']
-            },
-            series: [{
-                name: 'Delay',
-                data: [10, 4, 7, 2, 8],
-                color: 'green'
-            },
-            {
-                name: 'On time', // Nama series baru
-                data: [3, 6, 8, 1, 5], // Data series baru
-                color: 'black'
-            }]
-        };
-
-        // Inisialisasi grafik jika data ada
-        if (<?php echo json_encode($data['error']); ?> === false) {
-            Highcharts.chart('chart1', data);
-        }       
-
-        // Inisialisasi grafik kedua
-        Highcharts.chart('chart2', data2);
-
-       
-
-        // Inisialisasi grafik kedua
-        Highcharts.chart('chart2', data2); 
-
-    </script>
+   
