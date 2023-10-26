@@ -75,7 +75,7 @@ class controlroom extends Base
 	{
         ini_set('display_errors', 1);
 
-		$this->params['code_view_menu'] = "report";
+		$this->params['code_view_menu'] = "dashboard";
 
 		$userid = 4408;
 		$startdate  = $this->input->post("startdate");
@@ -253,163 +253,240 @@ class controlroom extends Base
 		$company = isset($_POST["company"]) ? $_POST["company"] : "all";
 		$violation = isset($_POST["violation"]) ? $_POST["violation"] : "all";
 		$vehicle = isset($_POST["vehicle"]) ? $_POST["vehicle"] : "all";
-		$periode = isset($_POST["periode"]) ? $_POST["periode"] : "today";
+		$periode = isset($_POST["periode"]) ? $_POST["periode"] : "custom";
 		$sdate = isset($_POST["sdate"]) ? $_POST["sdate"] : "";
 		$edate = isset($_POST["edate"]) ? $_POST["edate"] : "";
 
-			$year = date("Y");
-			$mont = date("m");
-			$nowday = date("d");
-			$err = false;
-			$msg = '';
+		$year = date("Y");
+		$mont = date("m");
+		$nowday = date("d");
+		$err = false;
+		$msg = '';
 
-			if ($periode == "today") {
-				$sdate = date("Y-m-d 00:00:00");
-				$edate = date("Y-m-d H:i:s");
-				$datein = date("d-m-Y", strtotime($sdate));
-			} elseif ($periode == "yesterday") {
-				$sdate = date("Y-m-d 00:00:00", strtotime("yesterday"));
-				$edate = date("Y-m-d 23:59:59", strtotime("yesterday"));
-				$datein = date("d-m-Y", strtotime("yesterday"));
-			} elseif ($periode == "last7") {
-				$firstday = $nowday - 7;
-				if ($nowday <= 7) {
-					$firstday = 1;
-				}
-				$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-" . $firstday));
-				$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
-				$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
-			} elseif ($periode == "this_month") {
-				$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-1"));
-				$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
-				$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
-			} elseif ($periode == "custom") {
-				$sdate = $sdate;
-				$edate = $edate;
-				$sdate = date("Y-m-d 00:00:00", strtotime($sdate));
-				$edate = date("Y-m-d 23:59:59", strtotime($edate));
-				$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
-				$diff = strtotime($edate) - strtotime($sdate);
-				if ($diff < 0) {
-					$err = true;
-					$msg = "Date is not correct!";
-				}
-				$diff = strtotime(date("Y-m-d")) - strtotime($sdate);
-				if ($diff < 0) {
-					$err = true;
-					$msg = "Date is not correct!";
-				}
-				$diff1 = date("m", strtotime($sdate));
-				$diff2 = date("m", strtotime($edate));
-				if ($diff1 != $diff2) {
-					$err = true;
-					$msg = "Date must be in the same month!";
-				}
-				$diff1 = date("Y", strtotime($sdate));
-				$diff2 = date("Y", strtotime($edate));
-				if ($diff1 != $diff2) {
-					$err = true;
-					$msg = "Date must be in the same year!";
-				}
+		if ($periode == "today") {
+			$sdate = date("Y-m-d 00:00:00");
+			$edate = date("Y-m-d H:i:s");
+			$datein = date("d-m-Y", strtotime($sdate));
+		} elseif ($periode == "yesterday") {
+			$sdate = date("Y-m-d 00:00:00", strtotime("yesterday"));
+			$edate = date("Y-m-d 23:59:59", strtotime("yesterday"));
+			$datein = date("d-m-Y", strtotime("yesterday"));
+		} elseif ($periode == "last7") {
+			$firstday = $nowday - 7;
+			if ($nowday <= 7) {
+				$firstday = 1;
+			}
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-" . $firstday));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} elseif ($periode == "this_month") {
+			$sdate = date("Y-m-d 00:00:00", strtotime($year . "-" . $mont . "-1"));
+			$edate = date("Y-m-d 23:59:59", strtotime($year . "-" . $mont . "-" . $nowday));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+		} elseif ($periode == "custom") {
+			$sdate = $sdate;
+			$edate = $edate;
+			$sdate = date("Y-m-d 00:00:00", strtotime($sdate));
+			$edate = date("Y-m-d 23:59:59", strtotime($edate));
+			$datein = date("d-m-Y", strtotime($sdate)) . " s.d. " . date("d-m-Y", strtotime($edate));
+			$diff = strtotime($edate) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			$diff = strtotime(date("Y-m-d")) - strtotime($sdate);
+			if ($diff < 0) {
+				$err = true;
+				$msg = "Date is not correct!";
+			}
+			$diff1 = date("m", strtotime($sdate));
+			$diff2 = date("m", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same month!";
+			}
+			$diff1 = date("Y", strtotime($sdate));
+			$diff2 = date("Y", strtotime($edate));
+			if ($diff1 != $diff2) {
+				$err = true;
+				$msg = "Date must be in the same year!";
+			}
+		}
+
+		$month = date("F", strtotime($sdate));
+		$year = date("Y", strtotime($sdate));
+
+		if ($err == true) {
+			$callback['error'] = true;
+			$callback['message'] = $msg;
+			echo json_encode($callback);
+			return;
+		}
+
+		switch ($month) {
+			case "January":
+				$dbtable = "alarm_evidence_januari_" . $year;
+				break;
+			case "February":
+				$dbtable = "alarm_evidence_februari_" . $year;
+				break;
+			case "March":
+				$dbtable = "alarm_evidence_maret_" . $year;
+				break;
+			case "April":
+				$dbtable = "alarm_evidence_april_" . $year;
+				break;
+			case "May":
+				$dbtable = "alarm_evidence_mei_" . $year;
+				break;
+			case "June":
+				$dbtable = "alarm_evidence_juni_" . $year;
+				break;
+			case "July":
+				$dbtable = "alarm_evidence_juli_" . $year;
+				break;
+			case "August":
+				$dbtable = "alarm_evidence_agustus_" . $year;
+				break;
+			case "September":
+				$dbtable = "alarm_evidence_september_" . $year;
+				break;
+			case "October":
+				$dbtable = "alarm_evidence_oktober_" . $year;
+				break;
+			case "November":
+				$dbtable = "alarm_evidence_november_" . $year;
+				break;
+			case "December":
+				$dbtable = "alarm_evidence_desember_" . $year;
+				break;
+		}
+
+		$this->dbts = $this->load->database("tensor_report", true);
+		$this->dbts->distinct();
+		$this->dbts->select("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') as date", FALSE);
+		if ($company != "" && $company != "all") {
+			$this->dbts->where("alarm_report_vehicle_company", $company);
+		}
+		if ($violation != "" && $violation != "all") {
+			$this->dbts->where("alarm_report_type", $violation);
+		}
+		if ($vehicle != "" && $vehicle != "all") {
+			$this->dbts->where("alarm_report_vehicle", $vehicle);
+		}
+		$this->dbts->where("alarm_report_start_time >=", $sdate);
+		$this->dbts->where("alarm_report_start_time <=", $edate);
+		$this->dbts->from($dbtable);
+		$query = $this->dbts->get();
+		$list_periode = $query->result();
+
+		// Inisialisasi array untuk menghitung jumlah true dan false
+		$trueCounts = array();
+		$falseCounts = array();
+
+		$list_dates = array();
+			foreach ($list_periode as $item) {
+				$list_dates[] = $item->date;
+		}
+		
+		// Initialize arrays to count delay and on-time alarms
+		$list_delay = array();
+		$list_ontime = array();
+		
+		// Loop through the separated list of dates
+		foreach ($list_dates as $date) {
+			$formatted_date = date("d", strtotime($date));
+
+			// Membuat query untuk menghitung jumlah delay alarms
+			$this->dbts->where("alarm_report_statusintervention_cr", "1");
+			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date); // Menggunakan format hanya angka
+
+			// Sisanya tetap sama seperti sebelumnya
+			$this->dbts->where("alarm_report_datetime_cr - alarm_report_start_time >= 900");
+
+			if ($violation !== "all") {
+				$this->dbts->where("alarm_report_type", $violation);
 			}
 
-			$month = date("F", strtotime($sdate));
-			$year = date("Y", strtotime($sdate));
-
-			if ($err == true) {
-				$callback['error'] = true;
-				$callback['message'] = $msg;
-				echo json_encode($callback);
-				return;
-			}
-
-			switch ($month) {
-				case "January":
-					$dbtable = "alarm_evidence_januari_" . $year;
-					break;
-				case "February":
-					$dbtable = "alarm_evidence_februari_" . $year;
-					break;
-				case "March":
-					$dbtable = "alarm_evidence_maret_" . $year;
-					break;
-				case "April":
-					$dbtable = "alarm_evidence_april_" . $year;
-					break;
-				case "May":
-					$dbtable = "alarm_evidence_mei_" . $year;
-					break;
-				case "June":
-					$dbtable = "alarm_evidence_juni_" . $year;
-					break;
-				case "July":
-					$dbtable = "alarm_evidence_juli_" . $year;
-					break;
-				case "August":
-					$dbtable = "alarm_evidence_agustus_" . $year;
-					break;
-				case "September":
-					$dbtable = "alarm_evidence_september_" . $year;
-					break;
-				case "October":
-					$dbtable = "alarm_evidence_oktober_" . $year;
-					break;
-				case "November":
-					$dbtable = "alarm_evidence_november_" . $year;
-					break;
-				case "December":
-					$dbtable = "alarm_evidence_desember_" . $year;
-					break;
-			}
-
-			$this->dbts = $this->load->database("tensor_report", true);
-			$this->dbts->distinct();
-			$this->dbts->select("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') as date",  FALSE );
-			if ($company != "" && $company != "all") {
-				$this->dbts->where("alarm_report_vehicle_company", $company);
-			}
-			if ($violation != "" && $violation != "all") {
-				$this->dbts->where("alarm_report_violation", $violation);
-			}
-			if ($vehicle != "" && $vehicle != "all") {
-				$this->dbts->where("alarm_report_vehicle", $vehicle);
-			}
-			$this->dbts->where("alarm_report_start_time >=", $sdate);
-			$this->dbts->where("alarm_report_start_time <=", $edate);
 			$this->dbts->from($dbtable);
-			$query = $this->dbts->get();
-			$list_periode = $query->result();
-			
-			$list_alarm_true = array();
-			$list_alarm_false = array();
-			$tempPeriode = array();
+			$total_delay_alarms = $this->dbts->count_all_results();
 
-			foreach($list_periode as $item){
-				$total_true_alarms = 0;
-				$this->dbts->where("alarm_report_statusintervention_cr", "1");
-				$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
-				$this->dbts->from($dbtable);
-				$total_true_alarms = $this->dbts->count_all_results();
-				array_push($list_alarm_true, $total_true_alarms);
-				
-				$total_false_alarms = 0;
-				$this->dbts->where("alarm_report_statusintervention_cr", "0");
-				$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
-				$this->dbts->from($dbtable);
-				$total_false_alarms = $this->dbts->count_all_results();
-				array_push($list_alarm_false, $total_false_alarms);
+			// Membuat query untuk menghitung jumlah on-time alarms
+			$this->dbts->where("alarm_report_statusintervention_cr", "1");
+			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date); // Menggunakan format hanya angka
 
-				array_push($tempPeriode, @$item->date);
+			// Sisanya tetap sama seperti sebelumnya
+			$this->dbts->where("alarm_report_datetime_cr - alarm_report_start_time <= 900");
+
+			if ($violation !== "all") {
+				$this->dbts->where("alarm_report_type", $violation);
 			}
 
-			$callback = array(
-				"list_periode" => $tempPeriode,
-				"list_alarm_true" => array_map('intval', $list_alarm_true), //ubah array string menjadi array int
-				"list_alarm_false" => array_map('intval', $list_alarm_false), //ubah array string menjadi array int
-			);
+			$this->dbts->from($dbtable);
+			$total_ontime_alarms = $this->dbts->count_all_results();
+
+			// Tambahkan jumlah delay dan on-time ke dalam array yang sesuai jika lebih besar dari 0
+			if ($total_delay_alarms > 0) {
+				array_push($list_delay, $total_delay_alarms);  # ubah objek menjadi array 
+			}
+
+			if ($total_ontime_alarms > 0) {
+				array_push($list_ontime, $total_ontime_alarms); # ubah objek menjadi array
+			}
+		}
+		
+
+	    foreach ($list_periode as $item) {
+		$this->dbts->where("alarm_report_statusintervention_cr", "1");
+		$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
+
+			if ($violation !== "all") {
+				$this->dbts->where("alarm_report_type", $violation);  # sort by alarm report type
+			}
+
+		$this->dbts->from($dbtable);
+		$total_true_alarms = $this->dbts->count_all_results();
+
+	
+		$this->dbts->where("alarm_report_statusintervention_cr", "0");
+		$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
+
+		if ($violation !== "all") {
+			$this->dbts->where("alarm_report_type", $violation);
+		 }
+
+		 // Tambahkan filter berdasarkan company jika bukan "all_company"
+		 if ($company !== "all_company") {
+			$this->dbts->where("alarm_report_vehicle_no", $company);
+		}
+		
+		$this->dbts->from($dbtable);
+		$total_false_alarms = $this->dbts->count_all_results();
+
+		if ($total_true_alarms > 0) {
+				$trueCounts[$item->date] = $total_true_alarms;
+		}
+
+		if ($total_false_alarms > 0) {
+				$falseCounts[$item->date] = $total_false_alarms;
+        }
+	 }
+
+		$list_alarm_true = array_values($trueCounts);
+		$list_alarm_false = array_values($falseCounts);
+ 
+		$tempPeriode = array();
+
+		$callback = array(
+			"list_periode" => $tempPeriode,
+			"list_alarm_true" => array_map('intval', $list_alarm_true), # ubah objek to array map #
+			"list_alarm_false" => array_map('intval', $list_alarm_false),
+			"list_delay" => array_map('intval', $list_delay),
+    		"list_ontime" => array_map('intval', $list_ontime),
+		);
 
 			$callback['error'] = false;
-			$callback['message'] = "Succesfully get data.";
+			$callback['message'] = "Successfully get data.";
 
 			echo json_encode($callback);
 			return;
@@ -463,6 +540,28 @@ class controlroom extends Base
         }
 
 	}
+
+	function getViolationData() {
+
+		$rviolation = $this->getViolation(); // Get the violation data from your existing function
+		$dataviolation = array(); // To store data violation
+		$master_violation = array(); // To store data violation in another format
+		$allviolation = array(); // To store violation IDs
+	
+		$nr = count($rviolation);
+		if ($nr > 0) {
+			for ($i = 0; $i < $nr; $i++) {
+				$dataviolation[$rviolation[$i]["alarmmaster_id"]] = $rviolation[$i]["alarmmaster_name"];
+				$master_violation[$i] = $rviolation[$i]["alarmmaster_name"];
+				array_push($allviolation, $rviolation[$i]["alarmmaster_id"]);
+			}
+		}
+		return array(
+			"dataviolation" => $dataviolation,
+			"master_violation" => $master_violation,
+			"allviolation" => $allviolation
+		);
+	}	
 
 	function searchmonth()
 	{
