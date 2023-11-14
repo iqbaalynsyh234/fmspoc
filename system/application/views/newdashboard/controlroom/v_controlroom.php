@@ -1,73 +1,17 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
-    <!-- Mengimpor modul tambahan untuk layout -->
-    <script src="https://code.highcharts.com/modules/layout.js"></script>
-    <link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
-    <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
-    <script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
-    <style type="text/css">
-    /* edit style datepicker*/
-    .datetimepicker {
-        background: #1F50A2;
-    }
+<link href="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.css" rel="stylesheet">
+<script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/extensions/sticky-header/bootstrap-table-sticky-header.js"></script>
+<script src="<?php base_url(); ?>assets/dashboard/assets/plugins/bootstrap-table-1.19.1/bootstrap-table.min.js"></script> 
 
-    .prev,
-    .switch,
-    .next,
-    .today {
-        background: #FFF;
-    }
-
-    .dow {
-        color: #FFF;
-        padding: 6px;
-    }
-
-    .table-condensed tbody tr td {
-        color: #FFF;
-    }
-
-    .datetimepicker .datetimepicker-days table tbody tr td:hover {
-        background-color: #000;
-    }
-
-    .datetimepicker .datetimepicker-years table tbody tr td span:hover {
-        background-color: #000;
-    }
-
-    .datetimepicker .datetimepicker-months table tbody tr td span:hover {
-        background-color: #000;
-    }
-
-
-
-    /* edit Style graphic */
-    .highcharts-data-label text {
-        text-decoration: none;
-    }
-
-    .highcharts-drilldown-axis-label {
-        pointer-events: none;
-    }
-    </style>
-    <script>
+<script>
     function frmsearch_onsubmit() {
         var company = $("#company").val();
-        // var vehicle = $("#vehicle").val();
-        // var violation = $("#violation").val();
         var periode = $("#periode").val();
-        // if (company != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
-        // if (vehicle != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
-        // if (violation != "all") {
-        //     alert("Data Not Ready");
-        //     return false;
-        // }
         if (periode == "this_month") {
             if (company == "all") {
                 alert("1 month data only for specific contractors!");
@@ -76,32 +20,6 @@
         }
         page();
         return false;
-    }
-
-    function page() {
-        // if (p == undefined) {
-        //     p = 0;
-        // }
-        // jQuery("#offset").val(p);
-        jQuery("#result").hide();
-        jQuery("#loader").show();
-
-        jQuery.post("<?= base_url(); ?>hse/search_violation2", jQuery("#frmsearch").serialize(),
-            function(r) {
-                if (r.error) {
-                    console.log(r);
-                    alert(r.message);
-                    jQuery("#loader").hide();
-                    jQuery("#result").hide();
-                    return;
-                } else {
-                    console.log(r);
-                    jQuery("#loader").hide();
-                    jQuery("#result").html(r.html);
-                    jQuery("#result").show();
-                }
-            }, "json"
-        );
     }
 
     function periode_onchange() {
@@ -132,23 +50,28 @@
     }
   </script>
 
-    <!-- start sidebar menu -->
+</script>
+
+</head>
+
+<body>
+ <!-- start sidebar menu -->
     <div class="sidebar-container">
         <?= $sidebar; ?>
     </div>
     <!-- end sidebar menu -->
 
     <!-- start page content -->
-<div class="page-content-wrapper">
-    <div class="page-content">
-        <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
+    <div class="page-content-wrapper">
+         <div class="page-content">
+            <form class="form-horizontal" name="frmsearch" id="frmsearch" onsubmit="javascript:return frmsearch_onsubmit()">
             <div class="row">
                 <div class="col-md-12 col-sm-12">
-                    <div class="panel" id="panel_form">
-                        <div class="card-header" style="text-align: center; font-size:large;">
-                            <b>Dashboard Profile Control Room</b>
+                    <div class="panel"id="myChart">
+                        <div class="card-header" style="text-align: center; font-size:22px;">
+                            <b>DASHBOARD PROFILE CONTROL ROOM</b>
                         </div>
-                       <div class="panel-body" id="bar-parent10">
+                        <div class="panel-body" id="bar-parent10">
                             <div class="form-group row">
                                 <div class="col-lg-2 col-md-2">
                                     <!--<select id="contractor" name="contractor" class="form-control select2" >-->
@@ -161,33 +84,20 @@
                                         }
                                         $ccompany = count($rcompany);
                                         for ($i = 0; $i < $ccompany; $i++) {
-                                            echo "<option value='" . $rcompany[$i]->company_id . "@" . $rcompany[$i]->company_name . "'>" . $rcompany[$i]->company_name . "</option>";
+                                            echo "<option value='" . $rcompany[$i]->company_id ."'>" . $rcompany[$i]->company_name . "</option>";
                                         }
                                         ?>
-                                    </select>
-                                    </div>
-                                <div class="col-lg-2 col-md-2" style="display: none;">
-                                    <select id="vehicle" name="vehicle" class="form-control select2">
-                                        <option value="all">--All Vehicle</option>
-                                        <?php
-                                        // $cvehicle = count($rvehicle);
-                                        // for ($i = 0; $i < $cvehicle; $i++) {
-                                        //     echo "<option value='" . $rvehicle[$i]->vehicle_imei . "/" . $rvehicle[$i]->vehicle_device . "/" . $rvehicle[$i]->vehicle_company . "'>" . $rvehicle[$i]->vehicle_no . "</option>";
-                                        // }
-                                        ?>
+                                        
                                     </select>
                                 </div>
-                                <div class="col-lg-2 col-md-2">
-                                    <?php // var_dump($alarmtype) 
-                                    ?>
-                                    <select id="violation" name="violation" class="form-control select2">
+                                <div class="col-lg-2 col-md-3">
+                                    <select id="violationmasterselect" name="violationmasterselect" class="form-control select2" onchange="onchangefilter()">
                                         <option value="all">--All Violation</option>
-                                        <?php
-                                        $cviolation = count($rviolation);
-                                        for ($i = 0; $i < $cviolation; $i++) {
-                                            echo "<option value='" . $rviolation[$i]["alarmmaster_id"] . "'>" . $rviolation[$i]["alarmmaster_name"] . "</option>";
-                                        }
-                                        ?>
+                                            <option value="call">Call</option>
+                                            <option value="cardistance">Car Distance</option>
+                                            <option value="distracted">Distracted</option>
+                                            <option value="fatigue">Fatigue</option>
+                                            <option value="overspeed" selected>Overspeed</option>
                                     </select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
@@ -205,7 +115,7 @@
                                     </select>
                                 </div>
                                 <div class="col-lg-2 col-md-2">
-                                    <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit">Search</button>
+                                    <button class="btn btn-circle btn-success" id="btnsearchreport" type="submit" style="margin-left: 30px;">Search</button>
                                     <!-- <img id="loader2" style="display:none;" src="<?php echo base_url(); ?>assets/images/ajax-loader.gif" /> -->
                                 </div>
                             </div>
@@ -231,7 +141,6 @@
                                 <div class="bufferbar bar bar2" style="width: 100%;"></div>
                                 <div class="auxbar bar bar3" style="width: 0%;"></div>
                             </div>
-
                         </div>
 
                     </div>
@@ -239,158 +148,117 @@
                 </div>
 
             </div>
-         </form>
-         <div id="result"></div>
+    </form>
 
-
-
-        <div id="modalStatev" class="modal" style="height: 100%;">
-            <div class="modal-content-state">
-                <div class="row">
-                    <div class="col-md-10">
-                        <p class="modalTitleforAll" id="modalStateTitle">
-                            <button type="button" name="button" id="export_xcel_info" class="btn btn-primary btn-sm">Export Excel</button>
-                        </p>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn btn-danger btn-sm" onclick="closemodalviolation()">X</div>
-                    </div>
-                </div>
-                <div id="modalStateContent">
-                    <table class="table table-striped table-bordered" id="contenttable" style="font-size: 12px; text-align:center;">
-
-                    </table>
-                </div>
-                <div id="divtoUpload" style="display:none"></div>
-            </div>
-        </div>
-
-    <!-- Container untuk grafik pertama -->
     <div id="chart1" style="width: 50%; float: left;"></div>
-    <!-- Container untuk grafik kedua -->
     <div id="chart2" style="width: 50%; float: left;"></div>
 
+    <?php //echo "<pre>" , var_dump($dataChart); ?>
+
     <script>
-        // Data untuk grafik pertama
-        var data1 = {
-            chart: {
-               type: 'spline'
-             },
-            title: {
-                text: 'DASHBOARD TRUE FALSE ALARM'
-            },
-            subtitle: {
-                text: 'Periode<br>'
-            },
-            xAxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
-                },
-            series: [{
-               name: 'True',
-               type: 'spline',
-               color: 'green',
-               data: [5, 10, 15, 20, 25]
-                 }, {
-               name: 'False',
-               type: 'spline',
-               color: 'black',
-               data: [10, 15, 10, 5, 20]
-             }]
-            
-        };
+        function frmsearch_onsubmit(){
 
-        // Data untuk grafik kedua
-        var data2 = {
-            title: {
-                text: 'DASHBOARD LEAD TIME INTERVENSI'
-            },
-            subtitle: {
-                text: 'Periode<br>' + date
-            },
-            xAxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
-            },
-            series: [{
-               name: 'True',
-               type: 'spline',
-               color: 'green',
-               data: [5, 10, 15, 20, 25]
-                 }, {
-               name: 'False',
-               color: 'black',
-               type: 'spline',
-               data: [10, 15, 10, 5, 20]
-             }]
-        };
+            const company = document.getElementById('company').value;
+            const violation = document.getElementById('violationmasterselect').value;
+            const periode = document.getElementById('periode').value;
+            const startDate = document.getElementById('startdate').value;
+            const endDate = document.getElementById('endtdate').value; 
 
-        // Membuat grafik pertama
-        Highcharts.chart('chart1', data1);
+            // var uri = "<?=base_url() . 'controlroom/room'?>";
+            jQuery("#loader").show();
+		    jQuery.post("<?=base_url()?>controlroom/search_violation2", jQuery("#frmsearch").serialize(),
+                function(r)
+                {
+                    // console.log("List Delay:", r.list_delay);
+                    // console.log("List alarm true: ", r.list_alarm_true);
+                    // console.log("List Ontime:", r.list_ontime);
 
-        // Membuat grafik kedua
-        Highcharts.chart('chart2', data2);
-     </script>
-     <script type="text/javascript">
-        function showinfo(sdate = null, edate = null, company = null, company_name = null, violation = null) {
-        // return false;
-        $("#contenttable").html("");
-        var data = {
-            start_date: sdate,
-            end_date: edate,
-            company: company,
-            company_name: company_name,
-            violation: violation
-        }
-        jQuery("#loader2").show();
-        jQuery.post("<?= base_url(); ?>hse/infodetail2", data,
-            function(r) {
-                if (r.error) {
-                    jQuery("#loader2").hide();
-                    alert("Data empty!");
-                    return;
-                } else {
-                    $("#contenttable").html(r.html);
-                    jQuery("#loader2").hide();
-                    $("#modalStatev").show();
-                }
-            }, "json"
+                    jQuery("#loader").hide();
+                    if (r.error)
+                    {
+                        alert(r.message);
+                        return false;
+                    }
+
+                    // Add '%' symbol to each data point
+                    var list_alarm_true_with_percent = r.list_alarm_true.map(function(value) {
+                        return value + '%';
+                    });
+
+                    var list_alarm_false_with_percent = r.list_alarm_false.map(function(value) {
+                        return value + '%';
+                    });
+
+                    var data1 = {
+                        title: {
+                                text: 'DASHBOARD TRUE-FALSE ALARM'
+                            },
+                        subtitle: {
+                            text: 'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value 
+                        },
+                        xAxis: {
+                            type: 'datetime', 
+                            title: {
+                                text: 'Periode (Day)'
+                            },
+                            categories: r.list_periode,   
+                        },
+                        yAxis: {
+                            title: {
+                                text: 'Percentage %'
+                            },
+                        }, 
+                        series: [{
+                            name: 'True',
+                            data: r.list_alarm_true,  
+                            color: 'green' 
+                        },
+                        {
+                            name: 'False', 
+                            data: r.list_alarm_false, 
+                            color: 'black'
+                        }]
+                    };
+
+                    // Inisialisasi grafik pertama
+                    Highcharts.chart('chart1', data1);
+                    
+                    var data2 = {
+                    title: {
+                        text: 'DASHBOARD LEAD TIME INTERVENSI'
+                    },
+                    subtitle: {
+                        text: 'Periode<br>' + document.getElementById('startdate').value + ' s/d ' + document.getElementById('endtdate').value
+                    },
+                    xAxis: {
+                        type: 'datetime', 
+                        title: {
+                            text: 'Periode (Day)'
+                        },
+                        categories: r.list_periode, // list periode //
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'percentage %'
+                        },
+                    }, 
+                    series: [{
+                        name: 'Delay',
+                        data: r.list_delay,
+                        color: 'green'
+                    },
+                    {
+                        name: 'On time', 
+                        data: r.list_ontime, 
+                        color: 'black'
+                    }]
+                };
+                // Inisialisasi grafik kedua
+                Highcharts.chart('chart2', data2);
+            }
+            , "json"
         );
+        return false;
     }
 
-    function closemodalviolation() {
-        $("#modalStatev").hide();
-    }
-
-    $(document).ready(function() {
-        //edit datepicker
-        $(".glyphicon-arrow-right").html(">>");
-        $(".glyphicon-arrow-left").html("<<");
-
-        // buildTable($table);
-        // $("#modalStatev").show();
-        page(0);
-
-        //export excel
-        jQuery("#export_xcel_info").click(function() {
-            var title = $("#contenttable .titletable").html();
-            var isi = $('#modalStateContent').html();
-            $("#divtoUpload").html(isi);
-            $("#divtoUpload .attachment").html("link");
-            // $("#divtoUpload .attachment2").html("link video");
-            var myBlob = new Blob([$("#divtoUpload").html()], {
-                type: 'application/vnd.ms-excel'
-            });
-            var url = window.URL.createObjectURL(myBlob);
-            var a = document.createElement("a");
-            document.body.appendChild(a);
-            a.href = url;
-            a.download = title + ".xls";
-            a.click();
-            setTimeout(function() {
-                window.URL.revokeObjectURL(url);
-            }, 0);
-
-        });
-
-     });
-  </script>
-</script>
+    </script>
