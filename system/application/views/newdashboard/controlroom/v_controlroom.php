@@ -11,8 +11,6 @@
 <script>
     function frmsearch_onsubmit() {
         var company = $("#company").val();
-        // var vehicle = $("#vehicle").val();
-        // var violation = $("#violation").val();
         var periode = $("#periode").val();
         if (periode == "this_month") {
             if (company == "all") {
@@ -22,16 +20,6 @@
         }
         page();
         return false;
-    }
-
-    function updateCharts(data) {
-            // Update data for the first chart
-            data1.xAxis.categories = data.list_periode;
-            data1.series[0].data = data.list_alarm_true;
-            data1.series[1].data = data.list_alarm_false;
-            data2.series[2].data = data.list_delay;
-            data2.series[2].data = data.list_ontime;
-
     }
 
     function periode_onchange() {
@@ -47,7 +35,7 @@
 
     }
 
-      function company_onchange() {
+    function company_onchange() {
         var data_company = jQuery("#company").val();
         var dc = data_company.split("@");
         var site = "<?= base_url() ?>hse/get_vehicle_by_company/" + dc[0];
@@ -100,17 +88,6 @@
                                         }
                                         ?>
                                         
-                                    </select>
-                                </div>
-                                <div class="col-lg-2 col-md-2" style="display: none;">
-                                    <select id="vehicle" name="vehicle" class="form-control select2">
-                                        <option value="all">--All Vehicle</option>
-                                        <?php
-                                        // $cvehicle = count($rvehicle);
-                                        // for ($i = 0; $i < $cvehicle; $i++) {
-                                        //     echo "<option value='" . $rvehicle[$i]->vehicle_imei . "/" . $rvehicle[$i]->vehicle_device . "/" . $rvehicle[$i]->vehicle_company . "'>" . $rvehicle[$i]->vehicle_no . "</option>";
-                                        // }
-                                        ?>
                                     </select>
                                 </div>
                                 <div class="col-lg-2 col-md-3">
@@ -180,6 +157,7 @@
 
     <script>
         function frmsearch_onsubmit(){
+
             const company = document.getElementById('company').value;
             const violation = document.getElementById('violationmasterselect').value;
             const periode = document.getElementById('periode').value;
@@ -202,6 +180,15 @@
                         return false;
                     }
 
+                    // Add '%' symbol to each data point
+                    var list_alarm_true_with_percent = r.list_alarm_true.map(function(value) {
+                        return value + '%';
+                    });
+
+                    var list_alarm_false_with_percent = r.list_alarm_false.map(function(value) {
+                        return value + '%';
+                    });
+
                     var data1 = {
                         title: {
                                 text: 'DASHBOARD TRUE-FALSE ALARM'
@@ -214,7 +201,7 @@
                             title: {
                                 text: 'Periode (Day)'
                             },
-                            categories: r.list_periode, 
+                            categories: r.list_periode,   
                         },
                         yAxis: {
                             title: {
@@ -248,11 +235,11 @@
                         title: {
                             text: 'Periode (Day)'
                         },
-                        categories: r.list_periode,
+                        categories: r.list_periode, // list periode //
                     },
                     yAxis: {
                         title: {
-                            text: 'Total'
+                            text: 'percentage %'
                         },
                     }, 
                     series: [{
@@ -275,4 +262,3 @@
     }
 
     </script>
-   
