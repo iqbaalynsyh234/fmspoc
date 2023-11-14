@@ -250,20 +250,20 @@ class controlroom extends Base
 
 		ini_set('memory_limit', "5G");
 		ini_set('max_execution_time', 300); // 5 minutes
-
+		
 		$company = isset($_POST["company"]) ? $_POST["company"] : "all";
 		$violation = isset($_POST["violation"]) ? $_POST["violation"] : "all";
 		$vehicle = isset($_POST["vehicle"]) ? $_POST["vehicle"] : "all";
 		$periode = isset($_POST["periode"]) ? $_POST["periode"] : "custom";
 		$sdate = isset($_POST["sdate"]) ? $_POST["sdate"] : "";
 		$edate = isset($_POST["edate"]) ? $_POST["edate"] : "";
-
+		
 		$year = date("Y");
 		$mont = date("m");
 		$nowday = date("d");
 		$err = false;
 		$msg = '';
-
+		
 		if ($periode == "today") {
 			$sdate = date("Y-m-d 00:00:00");
 			$edate = date("Y-m-d H:i:s");
@@ -313,17 +313,17 @@ class controlroom extends Base
 				$msg = "Date must be in the same year!";
 			}
 		}
-
+		
 		$month = date("F", strtotime($sdate));
 		$year = date("Y", strtotime($sdate));
-
+		
 		if ($err == true) {
 			$callback['error'] = true;
 			$callback['message'] = $msg;
 			echo json_encode($callback);
 			return;
 		}
-
+		
 		switch ($month) {
 			case "January":
 				$dbtable = "alarm_evidence_januari_" . $year;
@@ -362,7 +362,7 @@ class controlroom extends Base
 				$dbtable = "alarm_evidence_desember_" . $year;
 				break;
 		}
-
+		
 		$this->dbts = $this->load->database("tensor_report", true);
 		$this->dbts->distinct();
 		$this->dbts->select("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') as date", FALSE);
@@ -376,15 +376,19 @@ class controlroom extends Base
 		if ($vehicle != "" && $vehicle != "all") {
 			$this->dbts->where("alarm_report_vehicle", $vehicle);
 		}
+
 		$this->dbts->where("alarm_report_start_time >=", $sdate);
 		$this->dbts->where("alarm_report_start_time <=", $edate);
 		$this->dbts->from($dbtable);
 		$query = $this->dbts->get();
 		$list_periode = $query->result();
 
-		// Inisialisasi array untuk menghitung jumlah true dan false
-		$trueCounts = array();
-		$falseCounts = array();
+		// Initialize arrays to count delay and on-time alarms
+		$list_delay = array();
+		$list_ontime = array();
+		$total_alarms = 0; // Total jumlah alarms
+		$total_delay_alarms = 0; // Total jumlah delay alarms
+		$total_ontime_alarms = 0; // Total jumlah on-time alarms
 
 		$list_dates = array();
 
@@ -392,62 +396,52 @@ class controlroom extends Base
 			$list_dates[] = $item->date;
 		}
 
-		// Initialize arrays to count delay and on-time alarms
-		$list_delay = array();
-		$list_ontime = array();
-
-		// Loop through the separated list of dates
 		foreach ($list_dates as $date) {
 			$formatted_date = date("d", strtotime($date));
 
-			// Membuat query untuk menghitung jumlah delay alarms
-			$this->dbts->where("alarm_report_statusintervention_cr", "1");
-			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date); // Menggunakan format hanya angka
+			// Membuat query untuk menghitung jumlah alarms
+			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date);
 
-			// Sisanya tetap sama seperti sebelumnya
+			if ($violation !== "all") {
+				$this->dbts->where("alarm_report_name", $violation);
+			}
+
+			$this->dbts->from($dbtable);
+			$total_alarms += $this->dbts->count_all_results();
+
+			// querry delay and on time
+			$this->dbts->where("alarm_report_statusintervention_cr", "1");
+			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date);
 			$this->dbts->where("alarm_report_datetime_cr - alarm_report_start_time >= 900");
-
-			if ($violation !== "all") {
-				$this->dbts->where("alarm_report_type", $violation);
-			}
-
 			$this->dbts->from($dbtable);
-			$total_delay_alarms = $this->dbts->count_all_results();
+			$total_delay_alarms += $this->dbts->count_all_results();
 
-			// query untuk menghitung jumlah on-time alarms
+			// Membuat query untuk menghitung jumlah on-time alarms
 			$this->dbts->where("alarm_report_statusintervention_cr", "1");
-			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date); // Menggunakan format hanya angka
-
-			// Sisanya tetap sama seperti sebelumnya
+			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d') =", $formatted_date);
 			$this->dbts->where("alarm_report_datetime_cr - alarm_report_start_time <= 900");
-
-			if ($violation !== "all") {
-				$this->dbts->where("alarm_report_type", $violation);
-			}
-
-			if ($violation !== "all_company") {
-				$this->dbts->where("alarm_report_vehicle_company", $violation);
-			}
-
 			$this->dbts->from($dbtable);
-			$total_ontime_alarms = $this->dbts->count_all_results();
+			$total_ontime_alarms += $this->dbts->count_all_results();
 
 			// if kondisi jika 0 atau tidak di intervensi tidak masuk delay and on time
 			if ($total_delay_alarms > 0) {
-				array_push($list_delay, $total_delay_alarms);  # ubah objek menjadi array #
+				array_push($list_delay, $total_delay_alarms);
 			}
 
 			if ($total_ontime_alarms > 0) {
-				array_push($list_ontime, $total_ontime_alarms); # ubah objek menjadi array
+				array_push($list_ontime, $total_ontime_alarms);
 			}
 		}
+
+		$trueCounts = array();
+		$falseCounts = array();
 
 		foreach ($list_periode as $item) {
 			$this->dbts->where("alarm_report_statusintervention_cr", "1");
 			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
 
 			if ($violation !== "all") {
-				$this->dbts->where("alarm_report_type", $violation);  # sort by alarm report type #
+				$this->dbts->where("alarm_report_type", $violation); // Use "alarm_report_type" for violation
 			}
 
 			$this->dbts->from($dbtable);
@@ -457,17 +451,18 @@ class controlroom extends Base
 			$this->dbts->where("DATE_FORMAT(alarm_report_start_time, '%d %M %Y') = ", @$item->date);
 
 			if ($violation !== "all") {
-				$this->dbts->where("alarm_report_type", $violation);  # tabel violation
+				$this->dbts->where("alarm_report_type", $violation); // Use "alarm_report_type" for violation
 			}
 
 			// Tambahkan filter berdasarkan company jika bukan "all_company"
 			if ($company !== "all_company") {
-				$this->dbts->where("alarm_report_vehicle_company", $company);  # tabel company
+				$this->dbts->where("alarm_report_vehicle_company", $company);
 			}
 
 			$this->dbts->from($dbtable);
 			$total_false_alarms = $this->dbts->count_all_results();
 
+			# kondisi jika 0 tidak masuk true dan false
 			if ($total_true_alarms > 0) {
 				$trueCounts[$item->date] = $total_true_alarms;
 			}
@@ -477,39 +472,42 @@ class controlroom extends Base
 			}
 		}
 
+
 		$list_alarm_true = array_values($trueCounts);
 		$list_alarm_false = array_values($falseCounts);
-
 		$percentage_true_alarms = array();
 		$percentage_false_alarms = array();
 
-		$total_true_alarms = array_sum($list_alarm_true);
-		$total_false_alarms = array_sum($list_alarm_false);
-		$total_alarms = $total_true_alarms + $total_false_alarms;
-
-		
-		foreach ($list_alarm_true as $true_count) {
-			if ($total_alarms > 0) {
-				$percentage = min(round(($true_count / $total_alarms) * 100), 100); // Calculate percentage and ensure it's not more than 100%
-				$percentage_true_alarms[] = $percentage;
+		if ($total_alarms > 0) {
+			foreach ($list_alarm_true as $true_count) {
+				if ($total_alarms > 1) {
+					$percentage_true_alarms[] = round(($true_count / $total_alarms) * 100);
+				} else {
+					$percentage_true_alarms[] = 1;
+				}
 			}
 		}
-		
+
 		foreach ($list_alarm_false as $false_count) {
 			if ($total_alarms > 0) {
-				$percentage = min(round(($false_count / $total_alarms) * 100), 100); // Calculate percentage and ensure it's not more than 100%
-				$percentage_false_alarms[] = $percentage;
+				$percentage_false_alarms[] = round(($false_count / $total_alarms) * 100);
+			} else {
+				$percentage_false_alarms[] = 1;
 			}
 		}
-		
+
 		$tempPeriode = array();
+
+		foreach ($list_periode as $item) {
+			$tempPeriode[] = date('Y-m-d', strtotime($item->date));
+		}
 
 		$callback = array(
 			"list_periode" => $tempPeriode,
-			"list_alarm_true" => $percentage_true_alarms,
+			"list_alarm_true" => $percentage_true_alarms, # percentage true and false
 			"list_alarm_false" => $percentage_false_alarms,
-			"list_delay" => array_map('intval', $list_delay), // Convert objects to integers
-			"list_ontime" => array_map('intval', $list_ontime), // Convert objects to integers
+			"list_delay" => array_map('intval', $list_delay), // Mengubah objek menjadi bilangan bulat
+			"list_ontime" => array_map('intval', $list_ontime), // Mengubah objek menjadi bilangan bulat
 		);
 
 		$callback['error'] = false;
@@ -517,6 +515,7 @@ class controlroom extends Base
 
 		echo json_encode($callback);
 		return;
+
 
 	}
 
